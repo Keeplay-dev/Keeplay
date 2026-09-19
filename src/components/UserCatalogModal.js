@@ -59,6 +59,23 @@ const getCategoryColor = (category) => {
 
 const getLevel = (xp) => Math.floor((xp || 0) / 500) + 1;
 
+const getTitleByXp = (xp) => {
+  const lvl = Math.floor((xp || 0) / 500) + 1;
+  if (lvl >= 20) return "Patrono Eterno das Artes";
+  if (lvl >= 15) return "Lenda Cultural";
+  if (lvl >= 12) return "Sábio Multimídia";
+  if (lvl >= 10) return "Guardião do Acervo";
+  if (lvl >= 9) return "Mestre das Narrativas";
+  if (lvl >= 8) return "Conhecedor Ilustre";
+  if (lvl >= 7) return "Polímata Cultural";
+  if (lvl >= 6) return "Maratonista de Elite";
+  if (lvl >= 5) return "Curador Experiente";
+  if (lvl >= 4) return "Crítico Cultural";
+  if (lvl >= 3) return "Apreciador das Artes";
+  if (lvl >= 2) return "Explorador Cultural";
+  return "Iniciante Curioso";
+};
+
 export default function UserCatalogModal({ userId, onClose, onOpenChat }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -109,7 +126,15 @@ export default function UserCatalogModal({ userId, onClose, onOpenChat }) {
   const isPrivate = data?.isPrivate;
   const items = data?.items || [];
   const lists = data?.lists || [];
-  const affinity = data?.affinity || { percentage: 50, label: "Conexão em Potencial" };
+  const affinityRaw = data?.affinity;
+  let affinityPct = 50;
+  if (typeof affinityRaw?.percentage === 'number' && !isNaN(affinityRaw.percentage)) {
+    affinityPct = affinityRaw.percentage;
+  } else if (affinityRaw?.percentage && !isNaN(Number(affinityRaw.percentage))) {
+    affinityPct = Number(affinityRaw.percentage);
+  }
+  const affinityLabel = affinityRaw?.label || (affinityPct >= 80 ? "Alma Gêmea Cultural" : affinityPct >= 65 ? "Alta Afinidade" : "Conexão em Potencial");
+  const affinity = { percentage: affinityPct, label: affinityLabel };
 
   const filteredItems = items.filter((item) =>
     categoryFilter === "todos" ? true : item.category === categoryFilter
@@ -280,7 +305,7 @@ export default function UserCatalogModal({ userId, onClose, onOpenChat }) {
                     </span>
                     <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>•</span>
                     <span className="equipped-title-badge" style={{ fontSize: "0.75rem", padding: "0.2rem 0.6rem" }}>
-                      🎖️ {targetUser?.equipped_title || "Iniciante Curioso"}
+                      🎖️ {targetUser?.equipped_title || getTitleByXp(targetUser?.total_xp)}
                     </span>
                   </div>
 

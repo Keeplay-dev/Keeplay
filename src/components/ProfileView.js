@@ -3,12 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const TITLES_AVAILABLE = [
-  "Iniciante Curioso", "Cinéfilo Casual", "Maratonista de Series",
-  "Devorador de Livros", "Gamer Hardcore", "Platinador Lendário",
-  "Crítico Cultural", "Explorador Multimídia", "Curador de Listas",
-];
-
 export default function ProfileView() {
   const router = useRouter();
   const [profile, setProfile] = useState(null);
@@ -19,7 +13,7 @@ export default function ProfileView() {
 
   const [form, setForm] = useState({
     name: "", username: "", bio: "", is_private: false,
-    equipped_title: "", new_password: "", confirm_password: "",
+    new_password: "", confirm_password: "",
     avatar_url: "",
   });
 
@@ -65,7 +59,6 @@ export default function ProfileView() {
             username: p.username || "",
             bio: p.bio || "",
             is_private: !!p.is_private,
-            equipped_title: p.equipped_title || "Iniciante Curioso",
             avatar_url: p.avatar_url || "",
           }));
         }
@@ -93,7 +86,6 @@ export default function ProfileView() {
         username: form.username,
         bio: form.bio,
         is_private: form.is_private,
-        equipped_title: form.equipped_title,
         avatar_url: form.avatar_url,
       };
       if (form.new_password) body.new_password = form.new_password;
@@ -132,11 +124,6 @@ export default function ProfileView() {
   };
 
   const getLevel = (xp) => Math.floor((xp || 0) / 500) + 1;
-
-  const availableTitles = Array.from(new Set([
-    ...TITLES_AVAILABLE,
-    ...(profile?.unlocked_titles || [])
-  ]));
 
   if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>Carregando perfil...</div>;
 
@@ -243,12 +230,42 @@ export default function ProfileView() {
               </label>
             </div>
 
-            {/* Seleção de Título Equipado */}
-            <div className="form-group">
-              <label className="form-label">🎖️ Título Honorífico Equipado</label>
-              <select className="input-field" value={form.equipped_title} onChange={e => setForm(f => ({ ...f, equipped_title: e.target.value }))}>
-                {availableTitles.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
+            {/* Título Honorífico Baseado no Nível Cultural (Automático) */}
+            <div className="form-group" style={{
+              background: "linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)",
+              border: "1px solid rgba(168, 85, 247, 0.25)",
+              borderRadius: "14px",
+              padding: "1.15rem 1.25rem",
+              marginBottom: "1.25rem"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                <label className="form-label" style={{ margin: 0, fontWeight: 700, color: "#c084fc", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <span>🎖️</span> Título Honorífico do Nível Cultural
+                </label>
+                <span style={{ fontSize: "0.78rem", color: "#facc15", background: "rgba(250, 204, 21, 0.12)", padding: "0.2rem 0.6rem", borderRadius: "10px", fontWeight: 700 }}>
+                  ⭐ Nível {getLevel(profile?.total_xp)} • {profile?.total_xp || 0} XP
+                </span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginTop: "0.4rem" }}>
+                <div style={{ fontSize: "1.15rem", fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", gap: "0.45rem" }}>
+                  <span>👑</span>
+                  <span>{profile?.equipped_title || "Iniciante Curioso"}</span>
+                </div>
+              </div>
+
+              {profile?.next_title && (
+                <div style={{ marginTop: "0.65rem", fontSize: "0.82rem", color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <span>🚀</span>
+                  <span>
+                    Próximo título: <strong style={{ color: "#a855f7" }}>{profile.next_title.icon} {profile.next_title.title}</strong> no Nível {profile.next_title.minLevel} ({profile.next_title.levelsNeeded} {profile.next_title.levelsNeeded === 1 ? 'nível restante' : 'níveis restantes'})
+                  </span>
+                </div>
+              )}
+
+              <p style={{ margin: "0.65rem 0 0 0", fontSize: "0.76rem", color: "var(--text-muted)", lineHeight: 1.4 }}>
+                💡 <em>O título honorífico é concedido automaticamente de acordo com seu nível cultural e XP acumulado, evoluindo dinamicamente no Keeplay.</em>
+              </p>
             </div>
 
             <div className="form-row-2">

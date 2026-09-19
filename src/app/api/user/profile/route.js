@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
+import { getTitleByXp, getNextTitleInfo } from "@/lib/gamification";
 
 const JWT_SECRET = process.env.JWT_SECRET || "keeplay-secret-key-123";
 
@@ -30,6 +31,14 @@ export async function GET(req) {
     }
 
     const userStats = rows[0];
+    const autoTitle = getTitleByXp(userStats.total_xp);
+    if (userStats.equipped_title !== autoTitle) {
+      await pool.query("UPDATE users SET equipped_title = ? WHERE id = ?", [autoTitle, userAuth.id]);
+      userStats.equipped_title = autoTitle;
+    }
+
+    const currentLevel = Math.floor((userStats.total_xp || 0) / 500) + 1;
+    const nextTitle = getNextTitleInfo(currentLevel);
 
     // Get Achievements
     const [achievements] = await pool.query(`
@@ -48,6 +57,9 @@ export async function GET(req) {
     return NextResponse.json({
       profile: {
         ...userStats,
+        equipped_title: autoTitle,
+        current_level: currentLevel,
+        next_title: nextTitle,
         unlocked_titles: unlockedTitles.map(t => t.title_name)
       },
       achievements
@@ -63,21 +75,31 @@ export async function PUT(req) {
     const userAuth = await getUserFromToken();
     if (!userAuth) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
-    const { name, username, bio, is_private, equipped_title, avatar_url, new_password } = await req.json();
+    const { name, username, bio, is_private, avatar_url, new_password } = await req.json();
+
+    // Título Honorífico sempre é calculado pelo nível real de XP do usuário
+    const [userRows] = await pool.query("SELECT total_xp FROM users WHERE id = ?", [userAuth.id]);
+    const userTotalXp = userRows[0]?.total_xp || 0;
+    const autoTitle = getTitleByXp(userTotalXp);
 
     let updateQuery = "UPDATE users SET name=?, username=?, bio=?, is_private=?, equipped_title=?, avatar_url=? WHERE id=?";
-    let params = [name, username, bio, is_private ? 1 : 0, equipped_title, avatar_url || null, userAuth.id];
+    let params = [name, username, bio, is_private ? 1 : 0, autoTitle, avatar_url || null, userAuth.id];
 
     if (new_password && new_password.length >= 6) {
       const hash = await bcrypt.hash(new_password, 10);
       updateQuery = "UPDATE users SET name=?, username=?, bio=?, is_private=?, equipped_title=?, avatar_url=?, password_hash=? WHERE id=?";
-      params = [name, username, bio, is_private ? 1 : 0, equipped_title, avatar_url || null, hash, userAuth.id];
+      params = [name, username, bio, is_private ? 1 : 0, autoTitle, avatar_url || null, hash, userAuth.id];
     }
 
     await pool.query(updateQuery, params);
 
     const [rows] = await pool.query("SELECT * FROM v_user_stats WHERE user_id = ?", [userAuth.id]);
-    return NextResponse.json({ success: true, profile: rows[0] || null });
+    const updatedProfile = rows[0] || null;
+    if (updatedProfile) {
+      updatedProfile.equipped_title = autoTitle;
+    }
+
+    return NextResponse.json({ success: true, profile: updatedProfile });
   } catch (error) {
     console.error("Erro ao atualizar perfil:", error);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });

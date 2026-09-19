@@ -265,6 +265,22 @@ export default function CommunityView() {
   );
 
   const getLevel = (xp) => Math.floor((xp || 0) / 500) + 1;
+  const getTitleByXp = (xp) => {
+    const lvl = Math.floor((xp || 0) / 500) + 1;
+    if (lvl >= 20) return "Patrono Eterno das Artes";
+    if (lvl >= 15) return "Lenda Cultural";
+    if (lvl >= 12) return "Sábio Multimídia";
+    if (lvl >= 10) return "Guardião do Acervo";
+    if (lvl >= 9) return "Mestre das Narrativas";
+    if (lvl >= 8) return "Conhecedor Ilustre";
+    if (lvl >= 7) return "Polímata Cultural";
+    if (lvl >= 6) return "Maratonista de Elite";
+    if (lvl >= 5) return "Curador Experiente";
+    if (lvl >= 4) return "Crítico Cultural";
+    if (lvl >= 3) return "Apreciador das Artes";
+    if (lvl >= 2) return "Explorador Cultural";
+    return "Iniciante Curioso";
+  };
 
   const activityLabel = (type) => {
     const map = {
@@ -330,9 +346,23 @@ export default function CommunityView() {
                 const isPending = u.request_sent_by_me === 1 || (u.connection_status === 'pending' && u.connection_requester_id === currentUserId) || sentRequests.includes(u.id);
                 const hasIncomingRequest = u.request_received_by_me === 1 || requests.some(r => r.id === u.id);
 
-                // Mock visual para afinidade gerado de forma baseada no ID para variar
-                const affinityScore = 50 + ((u.id * 13) % 45);
-                const affinityLabel = affinityScore > 80 ? "Alma Gêmea Cultural" : affinityScore > 65 ? "Alta Afinidade" : "Conexão em Potencial";
+                // Afinidade cultural segura e precisa (garante que nunca seja NaN)
+                let affinityScore = 55;
+                if (typeof u.affinity_score === 'number' && !isNaN(u.affinity_score)) {
+                  affinityScore = u.affinity_score;
+                } else if (u.affinity?.percentage && !isNaN(Number(u.affinity.percentage))) {
+                  affinityScore = Number(u.affinity.percentage);
+                } else {
+                  let hash = 0;
+                  const str = String(u.id || u.username || "keeplay");
+                  for (let i = 0; i < str.length; i++) {
+                    hash = (hash * 31 + str.charCodeAt(i)) & 0xffffffff;
+                  }
+                  affinityScore = 55 + Math.abs(hash % 35);
+                }
+                affinityScore = Math.min(99, Math.max(35, Math.round(affinityScore)));
+                const affinityLabel = u.affinity_label || u.affinity?.label || (affinityScore >= 80 ? "Alma Gêmea Cultural" : affinityScore >= 65 ? "Alta Afinidade" : "Conexão em Potencial");
+                const userTitle = u.equipped_title || getTitleByXp(u.total_xp);
 
                 return (
                   <div key={u.id} className="user-card">
@@ -355,7 +385,7 @@ export default function CommunityView() {
                           </span>
                         </div>
                         <div className="equipped-title-badge" style={{ marginTop: "0.4rem", fontSize: "0.7rem", padding: "0.15rem 0.5rem" }}>
-                          ⭐ {u.equipped_title || "Iniciante Curioso"}
+                          ⭐ {userTitle}
                         </div>
                       </div>
                     </div>

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
-import { calculateMissionsProgress, checkAndUnlockAchievements } from "@/lib/gamification";
+import { calculateMissionsProgress, checkAndUnlockAchievements, computeCulturalAffinity, getTitleByXp } from "@/lib/gamification";
 
 const JWT_SECRET = process.env.JWT_SECRET || "keeplay-secret-key-123";
 
@@ -19,53 +19,6 @@ async function getUserFromToken() {
 }
 
 const XP_BY_RATING = { 1: 30, 2: 40, 3: 50, 4: 60, 5: 80 };
-
-function computeCulturalAffinity(myItems = [], otherItems = []) {
-  if (myItems.length === 0 || otherItems.length === 0) {
-    return { percentage: 50, label: "Conexão em Potencial" };
-  }
-
-  // 1. Proporção por categoria (até 45 pontos)
-  const cats = ["filme", "serie", "livro", "jogo"];
-  let catScore = 0;
-  cats.forEach(c => {
-    const myPct = myItems.filter(i => i.category === c).length / myItems.length;
-    const otherPct = otherItems.filter(i => i.category === c).length / otherItems.length;
-    catScore += 1 - Math.abs(myPct - otherPct);
-  });
-  const catNormalized = (catScore / 4) * 45;
-
-  // 2. Títulos compartilhados ou termos parecidos (até 35 pontos)
-  let sharedTitlesCount = 0;
-  const myTitles = myItems.map(i => i.title.toLowerCase().trim());
-  otherItems.forEach(oi => {
-    const oiTitle = (oi.title || "").toLowerCase().trim();
-    if (oiTitle && myTitles.some(t => t.includes(oiTitle) || oiTitle.includes(t))) {
-      sharedTitlesCount++;
-    }
-  });
-  const sharedNormalized = Math.min(35, sharedTitlesCount * 18);
-
-  // 3. Proximidade de notas médias (até 20 pontos)
-  const myRatings = myItems.filter(i => i.rating != null);
-  const otherRatings = otherItems.filter(i => i.rating != null);
-  let ratingCloseness = 10;
-  if (myRatings.length > 0 && otherRatings.length > 0) {
-    const myAvg = myRatings.reduce((acc, i) => acc + Number(i.rating), 0) / myRatings.length;
-    const otherAvg = otherRatings.reduce((acc, i) => acc + Number(i.rating), 0) / otherRatings.length;
-    ratingCloseness = Math.max(0, 1 - (Math.abs(myAvg - otherAvg) / 4)) * 20;
-  }
-
-  let totalPct = Math.round(catNormalized + sharedNormalized + ratingCloseness);
-  totalPct = Math.min(99, Math.max(35, totalPct));
-
-  let label = "🔮 Gostos Ecléticos";
-  if (totalPct >= 85) label = "🌟 Almas Gêmeas Culturais";
-  else if (totalPct >= 72) label = "✨ Grande Sintonia";
-  else if (totalPct >= 55) label = "🤝 Conexão Positiva";
-
-  return { percentage: totalPct, label };
-}
 
 export async function GET(req) {
   try {
@@ -88,6 +41,7 @@ export async function GET(req) {
         return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
       }
       const targetUser = targetRows[0];
+      targetUser.equipped_title = getTitleByXp(targetUser.total_xp);
 
       if (targetUser.is_private) {
         return NextResponse.json({
@@ -146,7 +100,7 @@ export async function GET(req) {
         "SELECT id, title, category, rating FROM media_items WHERE user_id = ?",
         [user.id]
       );
-      const affinity = computeCulturalAffinity(myItems, targetItems);
+      const affinity = computeCulturalAffinity(myItems, targetItems, targetUserId);
 
       return NextResponse.json({
         user: targetUser,

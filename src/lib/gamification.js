@@ -1,5 +1,101 @@
 import { v4 as uuidv4 } from "uuid";
 
+// Progressão Canônica de Títulos Honoríficos por Nível Cultural
+export const LEVEL_TITLES = [
+  { minLevel: 20, title: "Patrono Eterno das Artes", icon: "👑", desc: "Alcançou o ápice máximo do repertório cultural." },
+  { minLevel: 15, title: "Lenda Cultural", icon: "🌌", desc: "Um acervo lendário que inspira toda a comunidade." },
+  { minLevel: 12, title: "Sábio Multimídia", icon: "🔮", desc: "Sabedoria enciclopédica em filmes, livros, jogos e séries." },
+  { minLevel: 10, title: "Guardião do Acervo", icon: "🏛️", desc: "Autoridade e referência na preservação cultural." },
+  { minLevel: 9,  title: "Mestre das Narrativas", icon: "📜", desc: "Domínio e apreciação das grandes histórias." },
+  { minLevel: 8,  title: "Conhecedor Ilustre", icon: "🌟", desc: "Bagagem cultural brilhante e refinada." },
+  { minLevel: 7,  title: "Polímata Cultural", icon: "💎", desc: "Apreciação eclética e equilibrada de todas as mídias." },
+  { minLevel: 6,  title: "Maratonista de Elite", icon: "⚡", desc: "Consumo cultural voraz com resenhas consistentes." },
+  { minLevel: 5,  title: "Curador Experiente", icon: "🎨", desc: "Bom gosto apurado e coleções temáticas destacadas." },
+  { minLevel: 4,  title: "Crítico Cultural", icon: "🖋️", desc: "Olhar crítico e análises aprofundadas sobre cada obra." },
+  { minLevel: 3,  title: "Apreciador das Artes", icon: "🎭", desc: "Exploração cultural frequente e dedicada." },
+  { minLevel: 2,  title: "Explorador Cultural", icon: "🧭", desc: "Desbravando novos mundos, gêneros e formatos." },
+  { minLevel: 1,  title: "Iniciante Curioso", icon: "🌱", desc: "Iniciando a jornada no universo cultural do Keeplay." },
+];
+
+export function getTitleByLevel(level) {
+  const lvl = Math.max(1, Number(level) || 1);
+  for (const tier of LEVEL_TITLES) {
+    if (lvl >= tier.minLevel) {
+      return tier.title;
+    }
+  }
+  return "Iniciante Curioso";
+}
+
+export function getTitleByXp(xp) {
+  const level = Math.floor((Math.max(0, Number(xp) || 0)) / 500) + 1;
+  return getTitleByLevel(level);
+}
+
+export function getNextTitleInfo(level) {
+  const lvl = Math.max(1, Number(level) || 1);
+  const nextTier = [...LEVEL_TITLES].reverse().find(tier => tier.minLevel > lvl);
+  if (!nextTier) return null;
+  return {
+    title: nextTier.title,
+    minLevel: nextTier.minLevel,
+    icon: nextTier.icon,
+    levelsNeeded: nextTier.minLevel - lvl
+  };
+}
+
+// Algoritmo de Afinidade Cultural Robusto (garante que nunca seja NaN)
+export function computeCulturalAffinity(myItems = [], otherItems = [], otherUserId = "") {
+  let score = 50;
+
+  if (Array.isArray(myItems) && Array.isArray(otherItems) && myItems.length > 0 && otherItems.length > 0) {
+    const cats = ["filme", "serie", "livro", "jogo"];
+    let catScore = 0;
+    cats.forEach(c => {
+      const myCount = myItems.filter(i => i.category === c).length;
+      const otherCount = otherItems.filter(i => i.category === c).length;
+      const myPct = myItems.length > 0 ? myCount / myItems.length : 0;
+      const otherPct = otherItems.length > 0 ? otherCount / otherItems.length : 0;
+      catScore += 1 - Math.abs(myPct - otherPct);
+    });
+    const catNormalized = (catScore / 4) * 45;
+
+    let sharedTitlesCount = 0;
+    const myTitles = myItems.map(i => (i.title || "").toLowerCase().trim()).filter(Boolean);
+    otherItems.forEach(oi => {
+      const oiTitle = (oi.title || "").toLowerCase().trim();
+      if (oiTitle && myTitles.some(t => t.includes(oiTitle) || oiTitle.includes(t))) {
+        sharedTitlesCount++;
+      }
+    });
+    const sharedNormalized = Math.min(35, sharedTitlesCount * 18);
+
+    const myRatings = myItems.filter(i => i.rating != null && !isNaN(Number(i.rating)));
+    const otherRatings = otherItems.filter(i => i.rating != null && !isNaN(Number(i.rating)));
+    let ratingCloseness = 10;
+    if (myRatings.length > 0 && otherRatings.length > 0) {
+      const myAvg = myRatings.reduce((acc, i) => acc + Number(i.rating), 0) / myRatings.length;
+      const otherAvg = otherRatings.reduce((acc, i) => acc + Number(i.rating), 0) / otherRatings.length;
+      ratingCloseness = Math.max(0, 1 - (Math.abs(myAvg - otherAvg) / 4)) * 20;
+    }
+
+    score = Math.round(catNormalized + sharedNormalized + ratingCloseness);
+  } else {
+    let hash = 0;
+    const str = String(otherUserId || "keeplay");
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) & 0xffffffff;
+    }
+    score = 55 + Math.abs(hash % 35);
+  }
+
+  if (isNaN(score)) score = 65;
+  score = Math.min(99, Math.max(35, score));
+
+  const label = score >= 80 ? "Alma Gêmea Cultural" : score >= 65 ? "Alta Afinidade" : "Conexão em Potencial";
+  return { percentage: score, label };
+}
+
 // Definição canônica de Conquistas do Keeplay
 export const ACHIEVEMENTS_DATA = [
   // Categoria: Filmes
@@ -234,11 +330,16 @@ export async function claimMissionReward(userId, missionId, pool) {
   await checkAndUnlockAchievements(userId, pool);
 
   const [[userUpdated]] = await pool.query("SELECT total_xp FROM users WHERE id = ?", [userId]);
+  if (userUpdated) {
+    const levelTitle = getTitleByXp(userUpdated.total_xp);
+    await pool.query("UPDATE users SET equipped_title = ? WHERE id = ?", [levelTitle, userId]);
+  }
 
   return {
     success: true,
     reward_xp: mission.reward_xp,
-    total_xp: userUpdated.total_xp
+    total_xp: userUpdated.total_xp,
+    equipped_title: getTitleByXp(userUpdated.total_xp)
   };
 }
 
@@ -398,6 +499,13 @@ export async function checkAndUnlockAchievements(userId, pool) {
   }
 
   const totalUnlocked = Object.keys(unlockedMap).length;
+
+  // Sincroniza o título honorífico do usuário com base no nível correspondente ao total_xp
+  const [[currentUser]] = await pool.query("SELECT total_xp FROM users WHERE id = ?", [userId]);
+  if (currentUser) {
+    const levelTitle = getTitleByXp(currentUser.total_xp);
+    await pool.query("UPDATE users SET equipped_title = ? WHERE id = ?", [levelTitle, userId]);
+  }
 
   return {
     achievements: achievementsWithProgress,

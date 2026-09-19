@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
+import { computeCulturalAffinity, getTitleByXp } from "@/lib/gamification";
 
 const JWT_SECRET = process.env.JWT_SECRET || "keeplay-secret-key-123";
 
@@ -43,7 +44,43 @@ export async function GET() {
       [user.id, user.id, user.id, user.id, user.id]
     );
 
-    return NextResponse.json({ users, currentUserId: user.id });
+    // Buscar itens culturais do usuário autenticado para cálculo de afinidade
+    const [myItems] = await pool.query(
+      "SELECT id, category, title, rating FROM media_items WHERE user_id = ?",
+      [user.id]
+    );
+
+    // Buscar itens dos usuários da comunidade em lote para desempenho
+    const userIds = users.map(u => u.id);
+    let itemsByUser = {};
+    if (userIds.length > 0) {
+      const [allItems] = await pool.query(
+        "SELECT user_id, id, category, title, rating FROM media_items WHERE user_id IN (?)",
+        [userIds]
+      );
+      itemsByUser = allItems.reduce((acc, item) => {
+        if (!acc[item.user_id]) acc[item.user_id] = [];
+        acc[item.user_id].push(item);
+        return acc;
+      }, {});
+    }
+
+    // Processar afinidade cultural real e garantir título correspondente ao nível de XP
+    const enrichedUsers = users.map(u => {
+      const userItems = itemsByUser[u.id] || [];
+      const affinity = computeCulturalAffinity(myItems, userItems, u.id);
+      const titleByLevel = getTitleByXp(u.total_xp);
+
+      return {
+        ...u,
+        equipped_title: titleByLevel,
+        affinity_score: affinity.percentage,
+        affinity_label: affinity.label,
+        affinity: affinity
+      };
+    });
+
+    return NextResponse.json({ users: enrichedUsers, currentUserId: user.id });
   } catch (error) {
     console.error("Erro ao buscar usuarios:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
