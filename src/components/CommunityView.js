@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import UserCatalogModal from "./UserCatalogModal";
 
 export default function CommunityView() {
+  const router = useRouter();
   const [activeSubTab, setActiveSubTab] = useState("members");
 
   // Estados para armazenar os dados reais da API
@@ -14,6 +17,7 @@ export default function CommunityView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [sentRequests, setSentRequests] = useState([]);
+  const [selectedCatalogUserId, setSelectedCatalogUserId] = useState(null);
 
   // Carrega os dados reais do DB (Feed, Amigos, Requests e Usuários)
   useEffect(() => {
@@ -97,6 +101,24 @@ export default function CommunityView() {
     } catch (err) {
       console.error("Erro na requisição:", err);
     }
+  };
+
+  // Abrir Chat Diretamente com o Membro
+  const handleOpenChat = async (targetUser) => {
+    if (!targetUser || !targetUser.id) return;
+    const isFriend = friends.some(f => f.id === targetUser.id);
+    if (!isFriend) {
+      try {
+        await fetch("/api/community/connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ addressee_id: targetUser.id, auto_accept: true }),
+        });
+      } catch (e) {
+        console.error("Erro ao conectar:", e);
+      }
+    }
+    router.push(`/dashboard/chats?userId=${targetUser.id}`);
   };
 
   const filteredUsers = users.filter(u =>
@@ -242,9 +264,33 @@ export default function CommunityView() {
                           <button className="btn-friend not-friend" onClick={() => handleSendRequest(u.id)} style={{ width: "100%" }}>+ Adicionar</button>
                         )}
                       </div>
-                      <button className="btn-chat-trigger" title="Enviar Mensagem" style={{ flexShrink: 0, padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}>💬 Chat</button>
-                      <button className="btn-view-user-catalog" title="Ver catálogo do usuário" style={{ flexShrink: 0, padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}>📚 Ver Catálogo</button>
-                      <button className="btn-block-action" title="Bloquear usuário" style={{ flexShrink: 0, width: "34px", height: "34px", padding: 0, justifyContent: "center" }}>🚫</button>
+                      <button
+                        type="button"
+                        className="btn-chat-trigger"
+                        title="Enviar Mensagem"
+                        style={{ flexShrink: 0, padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
+                        onClick={() => handleOpenChat(u)}
+                      >
+                        💬 Chat
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-view-user-catalog"
+                        title="Ver catálogo do usuário"
+                        style={{ flexShrink: 0, padding: "0.45rem 0.75rem", fontSize: "0.78rem" }}
+                        onClick={() => setSelectedCatalogUserId(u.id)}
+                      >
+                        📚 Ver Catálogo
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-block-action"
+                        title="Bloquear usuário"
+                        style={{ flexShrink: 0, width: "34px", height: "34px", padding: 0, justifyContent: "center" }}
+                        onClick={() => alert(`Usuário @${u.username} silenciado.`)}
+                      >
+                        🚫
+                      </button>
                     </div>
 
                   </div>
@@ -315,15 +361,34 @@ export default function CommunityView() {
                   </div>
                 ) : (
                   friends.map(f => (
-                    <div key={f.id} className="request-item-card" style={{ flexDirection: "row", alignItems: "center" }}>
+                    <div key={f.id} className="request-item-card" style={{ flexDirection: "row", alignItems: "center", gap: "0.5rem" }}>
                       <div className="request-user-avatar" style={{ width: "36px", height: "36px", fontSize: "0.9rem" }}>
                         {f.avatar_url ? <img src={f.avatar_url} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} /> : f.name?.charAt(0).toUpperCase()}
                       </div>
-                      <div className="request-user-details" style={{ flex: 1 }}>
-                        <h4 style={{ fontSize: "0.9rem", margin: 0 }}>{f.name}</h4>
+                      <div className="request-user-details" style={{ flex: 1, minWidth: 0 }}>
+                        <h4 style={{ fontSize: "0.9rem", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{f.name}</h4>
                         <div className="request-user-username" style={{ fontSize: "0.75rem" }}>@{f.username}</div>
                       </div>
-                      {f.equipped_title && <span className="equipped-title-badge" style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", margin: 0 }}>⭐ {f.equipped_title}</span>}
+                      <div style={{ display: "flex", gap: "0.35rem", flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          className="btn-chat-trigger"
+                          title="Conversar"
+                          style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
+                          onClick={() => handleOpenChat(f)}
+                        >
+                          💬 Chat
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-view-user-catalog"
+                          title="Ver Catálogo"
+                          style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
+                          onClick={() => setSelectedCatalogUserId(f.id)}
+                        >
+                          📚 Catálogo
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -401,6 +466,17 @@ export default function CommunityView() {
             <p>Seu espaço está seguro e livre de bloqueios no momento.</p>
           </div>
         </div>
+      )}
+      {/* Modal de Visualização de Catálogo de Terceiros */}
+      {selectedCatalogUserId && (
+        <UserCatalogModal
+          userId={selectedCatalogUserId}
+          onClose={() => setSelectedCatalogUserId(null)}
+          onOpenChat={(targetId) => {
+            setSelectedCatalogUserId(null);
+            router.push(`/dashboard/chats?userId=${targetId}`);
+          }}
+        />
       )}
     </section>
   );

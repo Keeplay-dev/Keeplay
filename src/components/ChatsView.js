@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import UserCatalogModal from "./UserCatalogModal";
 
 const QUICK_REACTIONS = ["🍿", "🎬", "🎮", "📚", "⭐", "🔥", "❤️", "😱"];
 
 export default function ChatsView() {
+  const searchParams = useSearchParams();
+  const paramUserId = searchParams ? (searchParams.get("userId") || searchParams.get("friendId")) : null;
+
   const [friends, setFriends] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [selectedCatalogUserId, setSelectedCatalogUserId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputMsg, setInputMsg] = useState("");
   const [loadingFriends, setLoadingFriends] = useState(true);
@@ -34,12 +40,11 @@ export default function ChatsView() {
 
         // Buscar as conversas da API real (/api/chats)
         const chatsRes = await fetch("/api/chats");
+        let chatList = [];
         if (chatsRes.ok) {
           const data = await chatsRes.json();
 
-          // Mapeia os dados devolvidos pela API (other_user_id, last_message_text, etc)
-          // para o formato que a interface gráfica espera (id, name, last_message)
-          const normalizedChats = (data.chats || []).map(chat => {
+          chatList = (data.chats || []).map(chat => {
             const isUnread = chat.last_message_is_read === 0 && chat.sender_id !== loggedUserId;
 
             return {
@@ -47,14 +52,47 @@ export default function ChatsView() {
               name: chat.other_user_name,
               username: chat.other_user_username,
               avatar_url: chat.other_user_avatar,
+              equipped_title: chat.other_user_title,
               last_message: chat.last_message_text,
               last_message_time: chat.last_message_time,
-              unread_count: isUnread ? 1 : 0 // Indicador de mensagem não lida
+              unread_count: isUnread ? 1 : 0
             };
           });
-
-          setFriends(normalizedChats);
         }
+
+        // Se veio um userId na URL, seleciona automaticamente ou busca o contato
+        if (paramUserId) {
+          let found = chatList.find(c => c.id === paramUserId);
+          if (!found) {
+            try {
+              const uRes = await fetch(`/api/catalog?userId=${paramUserId}`);
+              if (uRes.ok) {
+                const uData = await uRes.json();
+                if (uData.user) {
+                  found = {
+                    id: uData.user.id,
+                    name: uData.user.name,
+                    username: uData.user.username,
+                    avatar_url: uData.user.avatar_url,
+                    equipped_title: uData.user.equipped_title,
+                    last_message: null,
+                    last_message_time: new Date().toISOString(),
+                    unread_count: 0
+                  };
+                  chatList = [found, ...chatList];
+                }
+              }
+            } catch (e) {
+              console.error("Erro ao carregar usuário selecionado:", e);
+            }
+          }
+          if (found) {
+            setSelectedFriend(found);
+            setShowSidebarMobile(false);
+          }
+        }
+
+        setFriends(chatList);
       } catch (err) {
         console.error("Erro ao carregar chats:", err);
       } finally {
@@ -62,7 +100,7 @@ export default function ChatsView() {
       }
     }
     loadData();
-  }, []);
+  }, [paramUserId]);
 
   // 2. Busca o histórico de mensagens com um amigo específico
   const fetchMessages = useCallback(async (friendId) => {
@@ -253,11 +291,62 @@ export default function ChatsView() {
               </div>
               <h3>Suas Conversas Culturais</h3>
               <p>Selecione um amigo na lista ao lado para trocar impressões, debater finais de séries, resenhar filmes e comparar conquistas!</p>
-              <div className="chat-placeholder-tips">
-                <div className="chat-tip-pill">✨ Exclusivo para amigos confirmados</div>
-                <div className="chat-tip-pill">🍿 Compartilhe recomendações</div>
-                <div className="chat-tip-pill">⚡ Respostas em tempo real</div>
-              </div>
+
+              {friends.length > 0 ? (
+                <div style={{ marginTop: "1.5rem", width: "100%", maxWidth: "560px" }}>
+                  <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.75rem", fontWeight: "600" }}>
+                    Escolha um amigo para conversar agora:
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "0.65rem" }}>
+                    {friends.map(f => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedFriend(f);
+                          setShowSidebarMobile(false);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.75rem",
+                          padding: "0.65rem 0.85rem",
+                          background: "rgba(255, 255, 255, 0.04)",
+                          border: "1px solid var(--border-subtle, rgba(255, 255, 255, 0.1))",
+                          borderRadius: "var(--radius-md, 12px)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <div style={{
+                          width: "36px", height: "36px", borderRadius: "50%",
+                          background: "linear-gradient(135deg, #6366f1, #a855f7)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: "#fff", fontWeight: "bold", overflow: "hidden", flexShrink: 0
+                        }}>
+                          {f.avatar_url ? <img src={f.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : f.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "0.88rem", fontWeight: "700", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {f.name}
+                          </div>
+                          <div style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
+                            @{f.username || "usuario"}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--accent-primary, #818cf8)", fontWeight: "600" }}>💬 Abrir</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="chat-placeholder-tips">
+                  <div className="chat-tip-pill">✨ Exclusivo para amigos confirmados</div>
+                  <div className="chat-tip-pill">🍿 Compartilhe recomendações</div>
+                  <div className="chat-tip-pill">⚡ Respostas em tempo real</div>
+                </div>
+              )}
             </div>
           ) : (
             /* CHAT ATIVO */
@@ -290,7 +379,12 @@ export default function ChatsView() {
                 </div>
 
                 <div className="active-chat-actions" style={{ display: "flex", gap: "0.5rem" }}>
-                  <button type="button" className="btn-icon-text chat-btn-profile" title="Ver catálogo">
+                  <button
+                    type="button"
+                    className="btn-icon-text chat-btn-profile"
+                    title="Ver catálogo"
+                    onClick={() => setSelectedCatalogUserId(selectedFriend.id)}
+                  >
                     <span>📚</span> <span className="hide-on-mobile">Ver Catálogo</span>
                   </button>
                   <button type="button" className="chat-btn-delete" title="Excluir histórico" onClick={() => handleDeleteChat(selectedFriend)}>
@@ -363,6 +457,15 @@ export default function ChatsView() {
         </div>
 
       </div>
+
+      {/* Modal de Catálogo do Usuário */}
+      {selectedCatalogUserId && (
+        <UserCatalogModal
+          userId={selectedCatalogUserId}
+          onClose={() => setSelectedCatalogUserId(null)}
+          onOpenChat={() => setSelectedCatalogUserId(null)}
+        />
+      )}
     </section>
   );
 }
