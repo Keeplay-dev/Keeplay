@@ -40,8 +40,16 @@ export async function GET(req) {
       ORDER BY ua.unlocked_at DESC
     `, [userAuth.id]);
 
+    const [unlockedTitles] = await pool.query(
+      "SELECT title_name FROM user_unlocked_titles WHERE user_id = ?",
+      [userAuth.id]
+    );
+
     return NextResponse.json({
-      profile: userStats,
+      profile: {
+        ...userStats,
+        unlocked_titles: unlockedTitles.map(t => t.title_name)
+      },
       achievements
     });
   } catch (error) {

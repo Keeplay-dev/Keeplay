@@ -133,6 +133,11 @@ export default function ProfileView() {
 
   const getLevel = (xp) => Math.floor((xp || 0) / 500) + 1;
 
+  const availableTitles = Array.from(new Set([
+    ...TITLES_AVAILABLE,
+    ...(profile?.unlocked_titles || [])
+  ]));
+
   if (loading) return <div style={{ padding: "3rem", textAlign: "center", color: "var(--text-secondary)" }}>Carregando perfil...</div>;
 
   return (
@@ -160,7 +165,7 @@ export default function ProfileView() {
 
           <div className="profile-stats-grid">
             <div className="profile-stat-box">
-              <div className="val">{profile?.total_items || 0}</div>
+              <div className="val">{profile?.total_items || profile?.total_media_items || 0}</div>
               <div className="lbl">Obras</div>
             </div>
             <div className="profile-stat-box">
@@ -168,20 +173,20 @@ export default function ProfileView() {
               <div className="lbl">Patente</div>
             </div>
             <div className="profile-stat-box">
-              <div className="val">0</div>
-              <div className="lbl">Platinas 🏆</div>
+              <div className="val">{profile?.total_games || 0}</div>
+              <div className="lbl">Jogos 🎮</div>
             </div>
             <div className="profile-stat-box">
-              <div className="val">0</div>
-              <div className="lbl">Troféus</div>
+              <div className="val">{profile?.total_achievements_unlocked || 0}</div>
+              <div className="lbl">Troféus 🏆</div>
             </div>
             <div className="profile-stat-box">
-              <div className="val">{profile?.hours_spent || "0h"}</div>
+              <div className="val">{profile?.total_hours_invested ? `${profile.total_hours_invested}h` : (profile?.hours_spent || "0h")}</div>
               <div className="lbl">Tempo Total</div>
             </div>
             <div className="profile-stat-box">
-              <div className="val">0</div>
-              <div className="lbl">Listas</div>
+              <div className="val">{profile?.total_friends || 0}</div>
+              <div className="lbl">Amigos 👥</div>
             </div>
           </div>
 
@@ -242,7 +247,7 @@ export default function ProfileView() {
             <div className="form-group">
               <label className="form-label">🎖️ Título Honorífico Equipado</label>
               <select className="input-field" value={form.equipped_title} onChange={e => setForm(f => ({ ...f, equipped_title: e.target.value }))}>
-                {TITLES_AVAILABLE.map(t => <option key={t} value={t}>{t}</option>)}
+                {availableTitles.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
 

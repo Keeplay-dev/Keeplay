@@ -15,13 +15,15 @@ export default function Navbar() {
   const [unreadChats, setUnreadChats] = useState(0);
   const [showWrapped, setShowWrapped] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [achStats, setAchStats] = useState({ unlocked: 0, total: 23 });
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [profRes, chatsRes] = await Promise.all([
+        const [profRes, chatsRes, achRes] = await Promise.all([
           fetch("/api/user/profile"),
-          fetch("/api/chats")
+          fetch("/api/chats"),
+          fetch("/api/achievements")
         ]);
         
         if (profRes.ok) {
@@ -34,14 +36,31 @@ export default function Navbar() {
           const unread = (chatsData.chats || []).reduce((acc, c) => acc + (c.unread_count || 0), 0);
           setUnreadChats(unread);
         }
+
+        if (achRes.ok) {
+          const achData = await achRes.json();
+          setAchStats({
+            unlocked: achData.total_unlocked ?? 0,
+            total: achData.total_count ?? (achData.achievements?.length || 23)
+          });
+        }
       } catch (err) {
         console.error("Erro ao carregar dados da navbar:", err);
       }
     }
     loadData();
-    // Poll for unread chats every 15s
+    // Poll for unread chats and updates every 15s
     const interval = setInterval(loadData, 15000);
-    return () => clearInterval(interval);
+
+    const handleGamificationUpdated = () => {
+      loadData();
+    };
+    window.addEventListener("keeplay:gamification-updated", handleGamificationUpdated);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("keeplay:gamification-updated", handleGamificationUpdated);
+    };
   }, []);
 
   async function handleLogout() {
@@ -135,7 +154,7 @@ export default function Navbar() {
 
           <button id="btnOpenAchievements" className="btn-icon-text" title="Ver medalhas e conquistas secretas" onClick={() => setShowAchievements(true)}>
             <span>🏆 Conquistas</span>
-            <span className="badge-count" id="unlockedBadgesCount">0/31</span>
+            <span className="badge-count" id="unlockedBadgesCount">{achStats.unlocked}/{achStats.total}</span>
           </button>
 
           <button id="btnOpenCsvModal" className="btn-icon-text" title="Importar/Exportar dados em CSV ou JSON">
@@ -159,7 +178,24 @@ export default function Navbar() {
       </div>
 
       {showWrapped && <WrappedModal onClose={() => setShowWrapped(false)} />}
-      {showAchievements && <AchievementsModal onClose={() => setShowAchievements(false)} />}
+      {showAchievements && (
+        <AchievementsModal
+          onClose={() => {
+            setShowAchievements(false);
+            fetch("/api/achievements")
+              .then(r => r.json())
+              .then(data => {
+                if (data.total_unlocked !== undefined) {
+                  setAchStats({
+                    unlocked: data.total_unlocked,
+                    total: data.total_count || data.achievements?.length || 23
+                  });
+                }
+              })
+              .catch(() => {});
+          }}
+        />
+      )}
     </header>
   );
 }

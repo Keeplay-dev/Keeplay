@@ -16,6 +16,8 @@ async function getUserFromToken() {
   }
 }
 
+import { checkAndUnlockAchievements } from "@/lib/gamification";
+
 export async function GET(req) {
   try {
     const userAuth = await getUserFromToken();
@@ -25,18 +27,15 @@ export async function GET(req) {
 
     const userId = userAuth.id;
 
-    const [allAchievements] = await pool.query("SELECT * FROM achievements ORDER BY category");
-    const [userAchievements] = await pool.query("SELECT achievement_id, unlocked_at FROM user_achievements WHERE user_id = ?", [userId]);
+    // Avalia conquistas e calcula progresso real
+    const result = await checkAndUnlockAchievements(userId, pool);
 
-    const unlockedIds = new Set(userAchievements.map(ua => ua.achievement_id));
-
-    const achievements = allAchievements.map(a => ({
-      ...a,
-      unlocked: unlockedIds.has(a.id),
-      unlocked_at: userAchievements.find(ua => ua.achievement_id === a.id)?.unlocked_at || null
-    }));
-
-    return NextResponse.json({ achievements });
+    return NextResponse.json({
+      achievements: result.achievements,
+      total_unlocked: result.totalUnlocked,
+      total_count: result.totalAchievements,
+      newly_unlocked: result.newlyUnlocked
+    });
 
   } catch (error) {
     console.error("Achievements API Error:", error);

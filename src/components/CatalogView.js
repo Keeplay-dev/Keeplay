@@ -191,6 +191,16 @@ export default function CatalogView() {
           setXpToast(`+${data.xp_gained} XP ganhos na sua jornada!`);
           setTimeout(() => setXpToast(null), 3500);
         }
+        if (data.newly_unlocked && data.newly_unlocked.length > 0) {
+          const names = data.newly_unlocked.map(a => a.name).join(", ");
+          setTimeout(() => {
+            setXpToast(`🏆 Conquista Desbloqueada: ${names}!`);
+            setTimeout(() => setXpToast(null), 4000);
+          }, 3600);
+        }
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("keeplay:gamification-updated"));
+        }
         fetchData();
       }
     } catch (err) {
@@ -198,6 +208,32 @@ export default function CatalogView() {
       alert("Erro ao salvar o registro.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleClaimMission = async (missionId) => {
+    try {
+      const res = await fetch("/api/missions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mission_id: missionId }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setXpToast(`🎁 Recompensa resgatada! +${data.reward_xp || ""} XP`);
+        setTimeout(() => setXpToast(null), 3500);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("keeplay:gamification-updated"));
+        }
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(err.error || "Não foi possível resgatar a recompensa.");
+      }
+    } catch (err) {
+      console.error("Erro ao resgatar missão:", err);
+      alert("Erro ao conectar com o servidor.");
     }
   };
 
@@ -695,28 +731,64 @@ export default function CatalogView() {
             ) : missions.length === 0 ? (
               <p style={{ gridColumn: "1/-1" }}>Não há missões ativas no momento.</p>
             ) : (
-              missions.map(m => (
-                <div key={m.id} className="mission-card">
-                  <div className="mission-header">
-                    <div className="mission-icon">{m.icon || "🎯"}</div>
-                    <div className="mission-info">
-                      <h4>{m.title}</h4>
-                      <p>{m.description}</p>
-                    </div>
-                  </div>
-                  <div style={{ marginTop: "1rem" }}>
-                    <div className="achievement-progress-bar-wrap">
-                      <div className="ach-prog-track">
-                        <div className="ach-prog-fill" style={{ width: `${Math.min(100, ((m.progress?.current_count || 0) / m.target_count) * 100)}%` }}></div>
+              missions.map(m => {
+                const current = m.progress?.current_count || 0;
+                const target = m.target_count || 1;
+                const pct = Math.min(100, Math.round((current / target) * 100));
+                const isCompleted = Boolean(m.progress?.is_completed || current >= target);
+                const isClaimed = Boolean(m.progress?.is_claimed);
+
+                return (
+                  <div key={m.id} className={`mission-card ${isClaimed ? "completed" : ""}`}>
+                    <div>
+                      <div className="mission-header">
+                        <div className="mission-icon">{m.icon || "🎯"}</div>
+                        <div className="mission-info">
+                          <h4>{m.title}</h4>
+                          <p>{m.description}</p>
+                        </div>
                       </div>
-                      <span className="ach-prog-text">{m.progress?.current_count || 0} / {m.target_count}</span>
+
+                      <div style={{ marginTop: "1rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", marginBottom: "0.35rem" }}>
+                          <span style={{ color: "var(--text-muted)" }}>Progresso: {current}/{target}</span>
+                          <span className="mission-reward-badge">+{m.reward_xp} XP</span>
+                        </div>
+                        <div className="achievement-progress-bar-wrap">
+                          <div className="ach-prog-track">
+                            <div className="ach-prog-fill" style={{ width: `${pct}%` }}></div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ marginTop: "0.85rem", textAlign: "right" }}>
-                      <span className="mission-reward-badge">+{m.reward_xp} XP</span>
+
+                    <div style={{ marginTop: "1rem" }}>
+                      {isClaimed ? (
+                        <div style={{ textAlign: "center", color: "var(--success)", fontWeight: 700, fontSize: "0.85rem", padding: "0.4rem" }}>
+                          ✓ Recompensa Resgatada
+                        </div>
+                      ) : isCompleted ? (
+                        <button
+                          type="button"
+                          className="btn-claim-mission"
+                          onClick={() => handleClaimMission(m.id)}
+                        >
+                          🎁 Resgatar +{m.reward_xp} XP
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-icon-text"
+                          style={{ width: "100%", justifyContent: "center", opacity: 0.6, cursor: "not-allowed" }}
+                          disabled
+                        >
+                          Em Andamento ({pct}%)
+                        </button>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

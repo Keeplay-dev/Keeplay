@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
+import { calculateMissionsProgress, checkAndUnlockAchievements } from "@/lib/gamification";
 
 const JWT_SECRET = process.env.JWT_SECRET || "keeplay-secret-key-123";
 
@@ -246,7 +247,17 @@ export async function POST(req) {
       );
     } catch (e) {}
 
-    return NextResponse.json({ success: true, id, xp_gained: xp });
+    // Gamification: update missions progress & evaluate achievements
+    let newlyUnlocked = [];
+    try {
+      await calculateMissionsProgress(user.id, pool);
+      const resAch = await checkAndUnlockAchievements(user.id, pool);
+      newlyUnlocked = resAch.newlyUnlocked;
+    } catch (gErr) {
+      console.error("Erro ao avaliar gamificação:", gErr);
+    }
+
+    return NextResponse.json({ success: true, id, xp_gained: xp, newly_unlocked: newlyUnlocked });
   } catch (error) {
     console.error("Erro ao criar item:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });

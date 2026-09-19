@@ -27,6 +27,8 @@ const MISSION_TEMPLATES = [
   { title: 'Explorador', description: 'Registre 5 obras de qualquer tipo no acervo.', category: null, target_count: 5, reward_xp: 250, icon: '🗺️' }
 ];
 
+import { calculateMissionsProgress, claimMissionReward } from "@/lib/gamification";
+
 export async function GET(req) {
   try {
     const user = await getUserFromToken();
@@ -36,56 +38,56 @@ export async function GET(req) {
 
     const now = new Date();
     const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-
-    // Calculate last day of month
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-    // 1. Check if missions exist for current month
+    // 1. Garantir que existem missões no mês atual
     const [existingMissions] = await pool.query(
       "SELECT * FROM monthly_missions WHERE month_year = ?",
       [currentMonthYear]
     );
 
-    let missions = existingMissions;
-
-    // 2. If not, generate random missions for this month
-    if (missions.length === 0) {
-      // Pick 3 random missions
+    if (existingMissions.length === 0) {
       const shuffled = [...MISSION_TEMPLATES].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, 3);
+      const selected = shuffled.slice(0, 4);
 
-      const insertPromises = selected.map(async (tmpl) => {
+      for (const tmpl of selected) {
         const id = 'mis_' + crypto.randomBytes(8).toString('hex');
         await pool.query(
           `INSERT INTO monthly_missions (id, month_year, title, description, category, target_count, reward_xp, icon, expires_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [id, currentMonthYear, tmpl.title, tmpl.description, tmpl.category, tmpl.target_count, tmpl.reward_xp, tmpl.icon, endOfMonth]
         );
-        return { ...tmpl, id, month_year: currentMonthYear, expires_at: endOfMonth };
-      });
-
-      missions = await Promise.all(insertPromises);
+      }
     }
 
-    // 3. Fetch user progress for these missions
-    const [progress] = await pool.query(
-      "SELECT * FROM user_mission_progress WHERE user_id = ? AND mission_id IN (?)",
-      [user.id, missions.map(m => m.id)]
-    );
-
-    const progressMap = progress.reduce((acc, p) => {
-      acc[p.mission_id] = p;
-      return acc;
-    }, {});
-
-    const missionsWithProgress = missions.map(m => ({
-      ...m,
-      progress: progressMap[m.id] || { current_count: 0, is_completed: 0, is_claimed: 0 }
-    }));
+    // 2. Calcula progresso dinâmico baseado nas obras reais do usuário
+    const missionsWithProgress = await calculateMissionsProgress(user.id, pool);
 
     return NextResponse.json({ missions: missionsWithProgress });
   } catch (error) {
     console.error("Erro nas missões mensais:", error);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
+  }
+}
+
+export async function POST(req) {
+  try {
+    const user = await getUserFromToken();
+    if (!user) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    const { mission_id } = await req.json();
+    if (!mission_id) {
+      return NextResponse.json({ error: "ID da missão é obrigatório" }, { status: 400 });
+    }
+
+    // Resgata recompensa, adiciona XP e verifica conquistas
+    const result = await claimMissionReward(user.id, mission_id, pool);
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Erro ao resgatar missão:", error);
+    return NextResponse.json({ error: error.message || "Erro ao resgatar missão" }, { status: 400 });
   }
 }

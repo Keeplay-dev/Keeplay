@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
+import { calculateMissionsProgress, checkAndUnlockAchievements } from "@/lib/gamification";
 
 const JWT_SECRET = process.env.JWT_SECRET || "keeplay-secret-key-123";
 
@@ -53,6 +54,14 @@ export async function PUT(req, { params }) {
         await pool.query("INSERT INTO consumption_logs (id, media_item_id, user_id, started_at, finished_at, is_rewatch) VALUES (?, ?, ?, ?, ?, ?)",
           [uuidv4(), id, user.id, date_started || null, date_finished || null, is_rewatch ? 1 : 0]);
       }
+    }
+
+    // Gamification: update missions progress & evaluate achievements
+    try {
+      await calculateMissionsProgress(user.id, pool);
+      await checkAndUnlockAchievements(user.id, pool);
+    } catch (gErr) {
+      console.error("Erro ao avaliar gamificação:", gErr);
     }
 
     return NextResponse.json({ success: true });
