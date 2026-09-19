@@ -94,18 +94,60 @@ export async function PUT(req) {
 
     const { name, username, bio, is_private, avatar_url, new_password } = await req.json();
 
+    const trimmedUsername = String(username || "").trim();
+    const cleanUsername = trimmedUsername.toLowerCase();
+
+    if (trimmedUsername) {
+      const usernameRegex = /^[a-zA-Z0-9_.]+$/;
+      if (trimmedUsername.length < 3 || trimmedUsername.length > 30 || !usernameRegex.test(trimmedUsername)) {
+        return NextResponse.json({
+          error: "O nome de usuário deve ter entre 3 e 30 caracteres e conter apenas letras, números, sublinhado (_) ou ponto (.)."
+        }, { status: 400 });
+      }
+
+      const [existing] = await pool.query(
+        "SELECT id FROM users WHERE (LOWER(username) = ? OR LOWER(email) = ?) AND id != ?",
+        [cleanUsername, cleanUsername + "@keeplay.local", userAuth.id]
+      );
+      if (existing.length > 0) {
+        return NextResponse.json({
+          error: "Este nome de usuário já está em uso por outro usuário. Por favor, escolha outro."
+        }, { status: 409 });
+      }
+    }
+
+    if (new_password) {
+      const passwordStr = String(new_password || "");
+      const missingRequirements = [];
+      if (passwordStr.length < 6) {
+        missingRequirements.push("no mínimo 6 caracteres");
+      }
+      if (!/[a-zA-Z]/.test(passwordStr)) {
+        missingRequirements.push("pelo menos uma letra");
+      }
+      if (!/[0-9]/.test(passwordStr)) {
+        missingRequirements.push("pelo menos um número");
+      }
+
+      if (missingRequirements.length > 0) {
+        return NextResponse.json({
+          error: `A nova senha é muito fraca. Requisitos necessários: ela deve conter ${missingRequirements.join(", ")}.`
+        }, { status: 400 });
+      }
+    }
+
     // Título Honorífico sempre é calculado pelo nível real de XP do usuário
     const [userRows] = await pool.query("SELECT total_xp FROM users WHERE id = ?", [userAuth.id]);
     const userTotalXp = userRows[0]?.total_xp || 0;
     const autoTitle = getTitleByXp(userTotalXp);
 
     let updateQuery = "UPDATE users SET name=?, username=?, bio=?, is_private=?, equipped_title=?, avatar_url=? WHERE id=?";
-    let params = [name, username, bio, is_private ? 1 : 0, autoTitle, avatar_url || null, userAuth.id];
+    let params = [name, trimmedUsername || username, bio, is_private ? 1 : 0, autoTitle, avatar_url || null, userAuth.id];
 
-    if (new_password && new_password.length >= 6) {
+    if (new_password) {
       const hash = await bcrypt.hash(new_password, 10);
       updateQuery = "UPDATE users SET name=?, username=?, bio=?, is_private=?, equipped_title=?, avatar_url=?, password_hash=? WHERE id=?";
-      params = [name, username, bio, is_private ? 1 : 0, autoTitle, avatar_url || null, hash, userAuth.id];
+      params = [name, trimmedUsername || username, bio, is_private ? 1 : 0, autoTitle, avatar_url || null, hash, userAuth.id];
     }
 
     await pool.query(updateQuery, params);

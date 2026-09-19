@@ -28,6 +28,9 @@ export default function WrappedModal({ onClose }) {
           const json = await res.json();
           setData(json);
           setSlides(json.slides || []);
+          if (json.has_shared_today) {
+            setSharedToFeed(true);
+          }
         }
       } catch (err) {
         console.error("Erro ao carregar o Wrapped:", err);
@@ -119,8 +122,9 @@ export default function WrappedModal({ onClose }) {
         })
       });
 
+      const resData = await res.json().catch(() => ({}));
+
       if (res.ok) {
-        const resData = await res.json();
         setSharedToFeed(true);
         showToast("🎉 Publicado no Feed da Comunidade! (+50 XP bônus)");
 
@@ -128,8 +132,10 @@ export default function WrappedModal({ onClose }) {
         window.dispatchEvent(new CustomEvent("keeplay:feed-updated"));
         window.dispatchEvent(new CustomEvent("keeplay:gamification-updated"));
       } else {
-        const err = await res.json();
-        showToast(err.error || "Erro ao publicar no feed.");
+        if (res.status === 429 || resData.already_shared_today) {
+          setSharedToFeed(true);
+        }
+        showToast(resData.error || "Limite diário de publicação atingido.");
       }
     } catch (err) {
       console.error(err);
@@ -209,7 +215,7 @@ export default function WrappedModal({ onClose }) {
           )}
 
           {/* Cabeçalho com Barra de Progresso Stories */}
-          <div>
+          <div className="wrapped-header">
             <div className="wrapped-story-bars">
               {slides.map((_, i) => (
                 <div
@@ -252,7 +258,7 @@ export default function WrappedModal({ onClose }) {
           </div>
 
           {/* ÁREA CENTRAL DO SLIDE DINÂMICO */}
-          <div className="wrapped-slides-wrapper" style={{ margin: "1rem 0" }}>
+          <div className="wrapped-slides-wrapper">
 
             {/* SLIDE 1: INTRO / JORNADA */}
             {slide.type === "intro" && (
@@ -272,22 +278,22 @@ export default function WrappedModal({ onClose }) {
                   {slide.highlight_label}
                 </div>
 
-                <div className="wrapped-stat-grid">
+                <div className="wrapped-stat-grid" style={{ maxWidth: "460px", width: "100%" }}>
                   <div className="wrapped-stat-item">
                     <div className="val">{slide.total_items}</div>
-                    <div className="lbl">Obras Exploradas</div>
+                    <div className="lbl" title="Obras Exploradas">Obras Exploradas</div>
                   </div>
                   <div className="wrapped-stat-item">
                     <div className="val">Nv. {slide.current_level}</div>
-                    <div className="lbl">{slide.current_title}</div>
+                    <div className="lbl" title={slide.current_title}>{slide.current_title}</div>
                   </div>
                   <div className="wrapped-stat-item">
                     <div className="val">{slide.total_hours}h</div>
-                    <div className="lbl">Horas de Imersão</div>
+                    <div className="lbl" title="Horas de Imersão">Horas de Imersão</div>
                   </div>
                 </div>
 
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.92rem", lineHeight: "1.5", marginTop: "1rem", maxWidth: "480px" }}>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.92rem", lineHeight: "1.5", marginTop: "1rem", maxWidth: "460px", width: "100%" }}>
                   {slide.description}
                 </p>
               </div>
@@ -459,18 +465,18 @@ export default function WrappedModal({ onClose }) {
                   Troféus e Medalhas Conquistadas
                 </div>
 
-                <div className="wrapped-stat-grid" style={{ maxWidth: "480px" }}>
+                <div className="wrapped-stat-grid" style={{ maxWidth: "460px", width: "100%" }}>
                   <div className="wrapped-stat-item">
                     <div className="val">{slide.secret_count}</div>
-                    <div className="lbl">🤫 Segredos Revelados</div>
+                    <div className="lbl" title="Segredos Revelados">🤫 Segredos</div>
                   </div>
                   <div className="wrapped-stat-item">
                     <div className="val">{slide.missions_count}</div>
-                    <div className="lbl">🎯 Missões Resgatadas</div>
+                    <div className="lbl" title="Missões Resgatadas">🎯 Missões</div>
                   </div>
                   <div className="wrapped-stat-item">
                     <div className="val">{slide.friends_count}</div>
-                    <div className="lbl">👥 Conexões Ativas</div>
+                    <div className="lbl" title="Conexões Ativas">👥 Conexões</div>
                   </div>
                 </div>
 
@@ -563,13 +569,12 @@ export default function WrappedModal({ onClose }) {
                 </div>
 
                 {/* BOTÕES DE COMPARTILHAMENTO ATIVOS */}
-                <div style={{ display: "flex", gap: "0.6rem", width: "100%", maxWidth: "460px", marginTop: "1rem", flexWrap: "wrap" }}>
+                <div className="wrapped-actions-grid">
                   <button
                     type="button"
-                    className="btn-wrapped-share"
+                    className="btn-wrapped-action-secondary"
                     onClick={handleCopySummary}
-                    title="Copiar resumo formatado para colar nas redes sociais ou WhatsApp"
-                    style={{ flex: 1, minWidth: "140px", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem", background: copied ? "rgba(16, 185, 129, 0.9)" : undefined }}
+                    title="Copiar resumo formatado para a área de transferência"
                   >
                     <span>{copied ? "✓" : "📋"}</span>
                     <span>{copied ? "Copiado!" : "Copiar Resumo"}</span>
@@ -577,37 +582,37 @@ export default function WrappedModal({ onClose }) {
 
                   <button
                     type="button"
-                    className="btn-wrapped-share"
+                    className="btn-wrapped-action-primary"
                     onClick={handleShareToFeed}
                     disabled={sharedToFeed || sharingLoading}
-                    title="Publicar este cartão diretamente no feed social da comunidade Keeplay"
-                    style={{
-                      flex: 1,
-                      minWidth: "150px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.4rem",
-                      background: sharedToFeed ? "rgba(99, 102, 241, 0.85)" : "linear-gradient(135deg, #10b981, #059669)",
-                      cursor: sharedToFeed ? "default" : "pointer"
-                    }}
+                    title={
+                      sharedToFeed
+                        ? "Você já compartilhou seu Wrapped hoje! O bônus diário de XP é limitado a 1 vez por dia."
+                        : "Publicar este cartão diretamente no feed social da comunidade Keeplay (+50 XP)"
+                    }
                   >
                     <span>{sharedToFeed ? "✓" : sharingLoading ? "⏳" : "🌐"}</span>
-                    <span>{sharedToFeed ? "Publicado no Feed!" : sharingLoading ? "Publicando..." : "Publicar no Feed (+50 XP)"}</span>
+                    <span>
+                      {sharedToFeed
+                        ? "Publicado hoje"
+                        : sharingLoading
+                        ? "Publicando..."
+                        : "Publicar no Feed (+50 XP)"}
+                    </span>
                   </button>
-
-                  {typeof navigator !== "undefined" && navigator.share && (
-                    <button
-                      type="button"
-                      className="btn-wrapped-nav"
-                      onClick={handleNativeShare}
-                      title="Compartilhar via aplicativo do dispositivo"
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem" }}
-                    >
-                      <span>📲</span>
-                    </button>
-                  )}
                 </div>
+
+                {typeof navigator !== "undefined" && navigator.share && (
+                  <button
+                    type="button"
+                    className="btn-wrapped-action-secondary"
+                    onClick={handleNativeShare}
+                    title="Compartilhar via aplicativo do dispositivo"
+                    style={{ width: "100%", maxWidth: "440px", marginTop: "0.45rem", height: "36px", fontSize: "0.8rem" }}
+                  >
+                    <span>📲 Compartilhar no Aparelho</span>
+                  </button>
+                )}
               </div>
             )}
 
@@ -620,35 +625,31 @@ export default function WrappedModal({ onClose }) {
               className="btn-wrapped-nav"
               onClick={prevSlide}
               disabled={currentSlide === 0}
-              style={{ opacity: currentSlide === 0 ? 0.35 : 1, cursor: currentSlide === 0 ? "default" : "pointer" }}
             >
               ← Anterior
             </button>
 
+            <div className="wrapped-slide-counter">
+              {currentSlide + 1} de {slides.length}
+            </div>
+
             {currentSlide < slides.length - 1 ? (
               <button
                 type="button"
-                className="btn-wrapped-share"
-                onClick={handleCopySummary}
-                style={{ fontSize: "0.82rem", padding: "0.55rem 1rem" }}
+                className="btn-wrapped-nav"
+                onClick={nextSlide}
               >
-                {copied ? "✓ Resumo Copiado!" : "📋 Copiar Resumo"}
+                Próximo →
               </button>
             ) : (
-              <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
-                Role o feed para ver as reações!
-              </span>
+              <button
+                type="button"
+                className="btn-wrapped-finish"
+                onClick={onClose}
+              >
+                Concluir ✓
+              </button>
             )}
-
-            <button
-              type="button"
-              className="btn-wrapped-nav"
-              onClick={nextSlide}
-              disabled={currentSlide === slides.length - 1}
-              style={{ opacity: currentSlide === slides.length - 1 ? 0.35 : 1, cursor: currentSlide === slides.length - 1 ? "default" : "pointer" }}
-            >
-              Próximo →
-            </button>
           </div>
 
         </div>

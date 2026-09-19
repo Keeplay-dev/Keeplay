@@ -328,8 +328,22 @@ Venha ver seu Wrapped e comparar sua afinidade cultural comigo no Keeplay! 🚀`
       }
     ];
 
+    // 6. Verifica se o usuário já compartilhou o Wrapped hoje no Feed (limite de 1 vez ao dia para evitar XP infinito)
+    const [todayShares] = await pool.query(
+      `SELECT id, created_at 
+       FROM activity_feed 
+       WHERE user_id = ? 
+         AND activity_type = 'wrapped' 
+         AND DATE(created_at) = CURDATE()
+       LIMIT 1`,
+      [userId]
+    );
+    const hasSharedToday = todayShares.length > 0;
+
     return NextResponse.json({
       success: true,
+      has_shared_today: hasSharedToday,
+      can_share_today: !hasSharedToday,
       user: {
         id: user.id,
         name: user.name,
@@ -372,6 +386,26 @@ export async function POST(req) {
     }
 
     const userId = userAuth.id;
+
+    // 1. Validação estrita: Permitido publicar apenas UMA vez ao dia para evitar XP infinito
+    const [todayShares] = await pool.query(
+      `SELECT id, created_at 
+       FROM activity_feed 
+       WHERE user_id = ? 
+         AND activity_type = 'wrapped' 
+         AND DATE(created_at) = CURDATE()
+       LIMIT 1`,
+      [userId]
+    );
+
+    if (todayShares.length > 0) {
+      return NextResponse.json({
+        error: "Você já compartilhou seu Wrapped hoje! Para evitar abusos de XP, o compartilhamento é permitido apenas uma vez por dia.",
+        already_shared_today: true,
+        can_share_today: false
+      }, { status: 429 });
+    }
+
     const body = await req.json().catch(() => ({}));
     const { shareText, archetype, topMedia } = body;
 
