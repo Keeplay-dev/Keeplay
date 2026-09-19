@@ -12,312 +12,19 @@
 // Base de Usuários Inicial (Demonstração Multi-Usuário Comunitária v2.0)
 // ==========================================================================
 
-const INITIAL_USERS = [
-  {
-    id: 'usr_rafael',
-    name: 'Rafael',
-    username: 'rafael',
-    email: 'rafael@gmail.com',
-    password: '1234',
-    avatar: '',
-    bio: 'Entusiasta de séries, ficção científica, livros envolventes e games épicos.',
-    isPrivate: false,
-    equippedTitle: 'Iniciante Curioso',
-    unlockedTitles: ['Iniciante Curioso'],
-    friends: ['usr_mariacine'],
-    unlockedAchievements: [],
-    customLists: [
-      {
-        id: 'list_1',
-        title: 'Obras-Primas da Ficção Científica',
-        description: 'Narrativas que exploram conceitos temporais, espaciais e filosóficos inesquecíveis.',
-        isPublic: true,
-        itemIds: ['demo_1', 'demo_3'],
-        createdAt: '10/09/2026'
-      }
-    ],
-    items: [
-      {
-        id: 'demo_1',
-        title: 'Interestelar',
-        category: 'filme',
-        status: 'assistido',
-        rating: 5,
-        comment: 'Uma obra-prima da ficção científica. A trilha de Hans Zimmer e o conceito de dilatação temporal são inesquecíveis.',
-        coverImage: 'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=600&auto=format&fit=crop&q=80',
-        xpGained: 120,
-        progress: { current: 1, total: 1, season: 1, hours: 2.8 },
-        providers: ['max', 'prime'],
-        consumptionLogs: [{ startedAt: '2026-09-08', finishedAt: '2026-09-10', notes: 'Primeira vez no cinema e re-assistido em casa.', isRewatch: true }],
-        createdAt: '10/09/2026'
-      },
-      {
-        id: 'demo_2',
-        title: 'The Witcher 3: Wild Hunt',
-        category: 'jogo',
-        status: 'platinado',
-        rating: 5,
-        comment: 'Narrativa impecável, combate envolvente e uma das melhores construções de mundo aberto já feitas. 100% de conquistas!',
-        coverImage: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&auto=format&fit=crop&q=80',
-        xpGained: 160,
-        progress: { current: 100, total: 100, season: 1, hours: 145 },
-        providers: ['steam', 'ps'],
-        consumptionLogs: [{ startedAt: '2026-07-01', finishedAt: '2026-09-12', notes: 'Campanha principal + Hearts of Stone + Blood and Wine.', isRewatch: false }],
-        createdAt: '12/09/2026'
-      },
-      {
-        id: 'demo_3',
-        title: 'Duna',
-        category: 'livro',
-        status: 'lido',
-        rating: 4,
-        comment: 'Mundo riquíssimo em intrigas políticas, ecologia e religião. Leitura obrigatória para fãs de sci-fi.',
-        coverImage: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&auto=format&fit=crop&q=80',
-        xpGained: 110,
-        progress: { current: 680, total: 680, season: 1, hours: 18 },
-        providers: ['kindle', 'livro'],
-        consumptionLogs: [{ startedAt: '2026-08-15', finishedAt: '2026-09-13', notes: 'Edição de luxo da Aleph.', isRewatch: false }],
-        createdAt: '13/09/2026'
-      }
-    ]
-  },
-  {
-    id: 'usr_mariacine',
-    name: 'Maria Eduarda',
-    username: 'mariacine',
-    email: 'maria@cinema.com',
-    password: '1234',
-    avatar: '',
-    bio: 'Cinéfila apaixonada por cinema noir, ficção científica clássica e direção de arte.',
-    isPrivate: false,
-    equippedTitle: 'Cinéfilo Assíduo',
-    unlockedTitles: ['Iniciante Curioso', 'Cinéfilo Assíduo'],
-    friends: ['usr_rafael'],
-    unlockedAchievements: ['filme_10', 'special_first'],
-    customLists: [
-      {
-        id: 'list_m1',
-        title: 'Cyberpunk & Distopias Visuais',
-        description: 'Filmes com iluminação de néon e reflexões existenciais.',
-        isPublic: true,
-        itemIds: ['m_1', 'm_3'],
-        createdAt: '08/09/2026'
-      }
-    ],
-    items: [
-      {
-        id: 'm_1',
-        title: 'Blade Runner 2049',
-        category: 'filme',
-        status: 'assistido',
-        rating: 5,
-        comment: 'Fotografia magistral de Roger Deakins e atmosfera cyberpunk incomparável.',
-        coverImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-        xpGained: 120,
-        progress: { current: 1, total: 1, season: 1, hours: 2.7 },
-        providers: ['max'],
-        consumptionLogs: [{ startedAt: '2026-09-01', finishedAt: '2026-09-01', notes: 'Re-assistido.', isRewatch: true }],
-        createdAt: '01/09/2026'
-      },
-      {
-        id: 'm_2',
-        title: 'Pulp Fiction',
-        category: 'filme',
-        status: 'assistido',
-        rating: 5,
-        comment: 'Diálogos icônicos e narrativa não-linear genial de Quentin Tarantino.',
-        coverImage: '',
-        xpGained: 120,
-        progress: { current: 1, total: 1, season: 1, hours: 2.5 },
-        providers: ['netflix'],
-        consumptionLogs: [{ startedAt: '2026-09-03', finishedAt: '2026-09-03', notes: '', isRewatch: false }],
-        createdAt: '03/09/2026'
-      },
-      {
-        id: 'm_3',
-        title: 'Severance (Ruptura)',
-        category: 'serie',
-        status: 'assistindo',
-        rating: 5,
-        comment: 'Suspense corporativo perturbador e brilhantemente construído. O final da 1ª temporada quando Helly descobre sua identidade fora da Lumon é estarrecedor!',
-        isSpoiler: true,
-        coverImage: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80',
-        xpGained: 120,
-        progress: { current: 7, total: 9, season: 1, hours: 7 },
-        providers: ['apple'],
-        consumptionLogs: [{ startedAt: '2026-09-05', finishedAt: '2026-09-08', notes: 'Temporada 1 em andamento.', isRewatch: false }],
-        createdAt: '08/09/2026'
-      }
-    ]
-  },
-  {
-    id: 'usr_lucasgames',
-    name: 'Lucas Gamer',
-    username: 'lucasgames',
-    email: 'lucas@games.com',
-    password: '1234',
-    avatar: '',
-    bio: 'Zerando e platinando todos os RPGs de mundo aberto e soulslikes possíveis.',
-    isPrivate: false,
-    equippedTitle: 'Zerador Profissional',
-    unlockedTitles: ['Iniciante Curioso', 'Gamer Casual', 'Zerador Profissional'],
-    friends: [],
-    unlockedAchievements: ['jogo_10', 'special_first'],
-    customLists: [
-      {
-        id: 'list_l1',
-        title: 'Soulslikes da Minha Vida',
-        description: 'Os maiores desafios superados nos videogames.',
-        isPublic: true,
-        itemIds: ['g_1'],
-        createdAt: '06/09/2026'
-      }
-    ],
-    items: [
-      {
-        id: 'g_1',
-        title: 'Elden Ring',
-        category: 'jogo',
-        status: 'platinado',
-        rating: 5,
-        comment: 'Um dos maiores mundos abertos já criados. Desafio e liberdade absolutos.',
-        coverImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop&q=80',
-        xpGained: 160,
-        progress: { current: 100, total: 100, season: 1, hours: 160 },
-        providers: ['steam', 'ps'],
-        consumptionLogs: [{ startedAt: '2026-08-01', finishedAt: '2026-09-05', notes: 'Platinado com build de fé.', isRewatch: false }],
-        createdAt: '05/09/2026'
-      },
-      {
-        id: 'g_2',
-        title: 'Cyberpunk 2077',
-        category: 'jogo',
-        status: 'zerado',
-        rating: 4,
-        comment: 'Night City é vibrante e a história de V e Johnny Silverhand é marcante.',
-        coverImage: '',
-        xpGained: 110,
-        progress: { current: 80, total: 100, season: 1, hours: 65 },
-        providers: ['steam'],
-        consumptionLogs: [{ startedAt: '2026-08-20', finishedAt: '2026-09-09', notes: 'Final com os Nômades.', isRewatch: false }],
-        createdAt: '09/09/2026'
-      }
-    ]
-  },
-  {
-    id: 'usr_carolbooks',
-    name: 'Carol Mendes',
-    username: 'carolbooks',
-    email: 'carol@livros.com',
-    password: '1234',
-    avatar: '',
-    bio: 'Devoradora de literatura fantástica, distopias e ficção especulativa.',
-    isPrivate: false,
-    equippedTitle: 'Devorador de Páginas',
-    unlockedTitles: ['Iniciante Curioso', 'Leitor Iniciante', 'Devorador de Páginas'],
-    friends: [],
-    unlockedAchievements: ['livro_10', 'special_first'],
-    customLists: [
-      {
-        id: 'list_c1',
-        title: 'Distopias Clássicas e Modernas',
-        description: 'Livros para refletir sobre sociedade, tecnologia e política.',
-        isPublic: true,
-        itemIds: ['b_2'],
-        createdAt: '04/09/2026'
-      }
-    ],
-    items: [
-      {
-        id: 'b_1',
-        title: 'O Nome do Vento',
-        category: 'livro',
-        status: 'lido',
-        rating: 5,
-        comment: 'Prosa lírica impressionante. Kvothe é um dos protagonistas mais cativantes da fantasia.',
-        coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&auto=format&fit=crop&q=80',
-        xpGained: 120,
-        progress: { current: 656, total: 656, season: 1, hours: 22 },
-        providers: ['livro'],
-        consumptionLogs: [{ startedAt: '2026-08-25', finishedAt: '2026-09-02', notes: 'Reler em breve.', isRewatch: false }],
-        createdAt: '02/09/2026'
-      },
-      {
-        id: 'b_2',
-        title: '1984',
-        category: 'livro',
-        status: 'lido',
-        rating: 5,
-        comment: 'Leitura essencial e assustadoramente atual sobre vigilância e controle.',
-        coverImage: '',
-        xpGained: 120,
-        progress: { current: 328, total: 328, season: 1, hours: 10 },
-        providers: ['kindle'],
-        consumptionLogs: [{ startedAt: '2026-09-03', finishedAt: '2026-09-04', notes: '', isRewatch: false }],
-        createdAt: '04/09/2026'
-      }
-    ]
-  }
-];
+const INITIAL_USERS = [];
 
 // ==========================================================================
-// Base Inicial de Conexões e Amizades v2.0 (Ciclo de Vida Assíncrono)
+// Base Inicial de Conexões e Amizades v2.0
 // ==========================================================================
 
-const INITIAL_CONNECTIONS = [
-  // Rafael e Maria Eduarda: amizade formalmente aceita
-  {
-    id: 'conn_1',
-    requesterId: 'usr_rafael',
-    addresseeId: 'usr_mariacine',
-    status: 'accepted',
-    createdAt: '10/09/2026',
-    updatedAt: '10/09/2026'
-  },
-  // Lucas enviou solicitação de amizade para Rafael (pendente de aprovação)
-  {
-    id: 'conn_2',
-    requesterId: 'usr_lucasgames',
-    addresseeId: 'usr_rafael',
-    status: 'pending',
-    createdAt: '14/09/2026',
-    updatedAt: '14/09/2026'
-  }
-];
+const INITIAL_CONNECTIONS = [];
 
 // ==========================================================================
-// Base Inicial de Mensagens de Chat (DMs entre Amigos Confirmados)
+// Base Inicial de Mensagens de Chat
 // ==========================================================================
 
-const INITIAL_MESSAGES = [
-  {
-    id: 'msg_init_1',
-    senderId: 'usr_mariacine',
-    receiverId: 'usr_rafael',
-    text: 'Oi Rafael! Vi que você favoritou Interestelar e Duna no seu acervo cultural, muito bom gosto! 🎬🍿',
-    timestamp: Date.now() - (1000 * 60 * 60 * 4), // 4 horas atrás
-    createdAt: '15/09/2026 18:50',
-    read: true
-  },
-  {
-    id: 'msg_init_2',
-    senderId: 'usr_rafael',
-    receiverId: 'usr_mariacine',
-    text: 'Oi Maria! Muito obrigado! Duna e Interestelar são fantásticos. Vi que você assistiu Blade Runner 2049 e Severance também, a fotografia de Blade Runner é de outro mundo!',
-    timestamp: Date.now() - (1000 * 60 * 60 * 2), // 2 horas atrás
-    createdAt: '15/09/2026 20:51',
-    read: true
-  },
-  {
-    id: 'msg_init_3',
-    senderId: 'usr_mariacine',
-    receiverId: 'usr_rafael',
-    text: 'Com certeza! Roger Deakins é um gênio da iluminação. E o final da 1ª temporada de Severance é de cair o queixo! Quando puder, assista aos episódios finais! 🔥',
-    timestamp: Date.now() - (1000 * 60 * 30), // 30 min atrás
-    createdAt: '15/09/2026 22:20',
-    read: false
-  }
-];
+const INITIAL_MESSAGES = [];
 
 // Níveis de Gamificação
 const LEVEL_TIERS = [
@@ -439,6 +146,59 @@ const ACHIEVEMENTS_DEF = [
       return { current: count, target: 4 };
     }
   },
+  // CONQUISTAS DE MISSÕES MENSAIS (Temporadas & Gamificação)
+  {
+    id: 'mission_first',
+    name: 'Primeira Missão Cumprida',
+    category: 'missoes',
+    desc: 'Completou e resgatou sua 1ª missão sazonal do mês.',
+    icon: '🎯',
+    isSecret: false,
+    check: (items, user) => ((user && ((user.lifetimeMissionsCompleted || 0) + (user.claimedMissions || []).length)) || 0) >= 1,
+    getProgress: (items, user) => {
+      const count = (user && ((user.lifetimeMissionsCompleted || 0) + (user.claimedMissions || []).length)) || 0;
+      return { current: Math.min(count, 1), target: 1 };
+    }
+  },
+  {
+    id: 'mission_3',
+    name: 'Foco Mensal',
+    category: 'missoes',
+    desc: 'Completou 3 missões temporárias com sucesso.',
+    icon: '🏅',
+    isSecret: false,
+    check: (items, user) => ((user && ((user.lifetimeMissionsCompleted || 0) + (user.claimedMissions || []).length)) || 0) >= 3,
+    getProgress: (items, user) => {
+      const count = (user && ((user.lifetimeMissionsCompleted || 0) + (user.claimedMissions || []).length)) || 0;
+      return { current: Math.min(count, 3), target: 3 };
+    }
+  },
+  {
+    id: 'mission_month_master',
+    name: 'Mestre da Temporada',
+    category: 'missoes',
+    desc: 'Resgatou todas as 4 missões ativas de um mês!',
+    icon: '🌟',
+    isSecret: false,
+    check: (items, user) => Boolean(user && (user.claimedMissions || []).length >= 4),
+    getProgress: (items, user) => {
+      const count = user ? (user.claimedMissions || []).length : 0;
+      return { current: Math.min(count, 4), target: 4 };
+    }
+  },
+  {
+    id: 'mission_10',
+    name: 'Veterano das Temporadas',
+    category: 'missoes',
+    desc: 'Acumulou 10 missões mensais resgatadas ao longo da sua jornada.',
+    icon: '👑',
+    isSecret: false,
+    check: (items, user) => ((user && ((user.lifetimeMissionsCompleted || 0) + (user.claimedMissions || []).length)) || 0) >= 10,
+    getProgress: (items, user) => {
+      const count = (user && ((user.lifetimeMissionsCompleted || 0) + (user.claimedMissions || []).length)) || 0;
+      return { current: Math.min(count, 10), target: 10 };
+    }
+  },
   // CONQUISTAS SECRETAS (Gamificação Avançada)
   {
     id: 'secret_midnight',
@@ -546,40 +306,73 @@ const PROVIDERS_DATA = [
   { id: 'cinema', name: 'Cinema', icon: '🍿' }
 ];
 
-// Missões Temporárias Mensais (Rotativas)
-const MONTHLY_MISSIONS_POOL = [
+// ==========================================================================
+// Catálogo Expandido de Missões Mensais para Sorteio Aleatório & Reset Mensal
+// ==========================================================================
+
+const MONTHLY_MISSIONS_TEMPLATES = [
   {
-    id: 'm_filme_2',
-    title: 'Sessão Dupla',
+    id: 'm_filmes_2',
+    title: 'Sessão Dupla de Cinema',
     category: 'filme',
-    desc: 'Cadastre ou assista a 2 filmes neste mês.',
+    desc: 'Cadastre ou assista a 2 filmes no seu acervo.',
     target: 2,
     rewardXp: 150,
     icon: '🎬',
     check: (items) => items.filter(i => i.category === 'filme').length
   },
   {
+    id: 'm_filme_4star',
+    title: 'Cinéfilo Exigente',
+    category: 'filme',
+    desc: 'Avalie 1 filme com 4 ou 5 estrelas.',
+    target: 1,
+    rewardXp: 130,
+    icon: '⭐',
+    check: (items) => items.filter(i => i.category === 'filme' && Number(i.rating) >= 4).length
+  },
+  {
+    id: 'm_serie_maratona',
+    title: 'Temporada em Chamas',
+    category: 'serie',
+    desc: 'Acompanhe ou finalize ao menos 1 série.',
+    target: 1,
+    rewardXp: 140,
+    icon: '🍿',
+    check: (items) => items.filter(i => i.category === 'serie').length
+  },
+  {
+    id: 'm_serie_episodios',
+    title: 'Maratona de Episódios',
+    category: 'serie',
+    desc: 'Acumule ao menos 5 episódios assistidos em séries.',
+    target: 5,
+    rewardXp: 160,
+    icon: '📺',
+    check: (items) => items.filter(i => i.category === 'serie').reduce((acc, i) => acc + (i.progress ? (Number(i.progress.current) || 0) : 0), 0)
+  },
+  {
+    id: 'm_jogo_zerar',
+    title: 'Zerar é Arte',
+    category: 'jogo',
+    desc: 'Conclua ou platine 1 jogo no seu histórico cultural.',
+    target: 1,
+    rewardXp: 180,
+    icon: '🎮',
+    check: (items) => items.filter(i => i.category === 'jogo' && (i.status === 'zerado' || i.status === 'platinado')).length
+  },
+  {
     id: 'm_jogo_4star',
     title: 'Gamer Determinado',
     category: 'jogo',
-    desc: 'Avalie ou finalize 2 jogos com 4 ou 5 estrelas.',
+    desc: 'Avalie ou conclua 2 jogos com 4 ou 5 estrelas.',
     target: 2,
     rewardXp: 180,
-    icon: '🎮',
+    icon: '🕹️',
     check: (items) => items.filter(i => i.category === 'jogo' && Number(i.rating) >= 4).length
   },
   {
-    id: 'm_critica_detalhe',
-    title: 'Crítico Detalhista',
-    category: null,
-    desc: 'Escreva 1 resenha aprofundada com mais de 50 caracteres.',
-    target: 1,
-    rewardXp: 120,
-    icon: '✍️',
-    check: (items) => items.filter(i => i.comment && i.comment.trim().length >= 50).length
-  },
-  {
-    id: 'm_livro_1',
+    id: 'm_livro_leitura',
     title: 'Páginas em Foco',
     category: 'livro',
     desc: 'Registre ou conclua 1 livro no seu acervo.',
@@ -587,69 +380,139 @@ const MONTHLY_MISSIONS_POOL = [
     rewardXp: 140,
     icon: '📚',
     check: (items) => items.filter(i => i.category === 'livro').length
+  },
+  {
+    id: 'm_livro_paginas',
+    title: 'Leitor Voraz',
+    category: 'livro',
+    desc: 'Avance ou leia 100 páginas no acumulado de livros.',
+    target: 100,
+    rewardXp: 150,
+    icon: '📖',
+    check: (items) => items.filter(i => i.category === 'livro').reduce((acc, i) => acc + (i.progress ? (Number(i.progress.current) || 0) : 0), 0)
+  },
+  {
+    id: 'm_resenha_profunda',
+    title: 'Crítico Detalhista',
+    category: 'especial',
+    desc: 'Escreva 1 resenha aprofundada com mais de 50 caracteres.',
+    target: 1,
+    rewardXp: 120,
+    icon: '✍️',
+    check: (items) => items.filter(i => i.comment && i.comment.trim().length >= 50).length
+  },
+  {
+    id: 'm_duas_resenhas',
+    title: 'Voz da Comunidade',
+    category: 'especial',
+    desc: 'Escreva comentários avaliativos em ao menos 2 obras.',
+    target: 2,
+    rewardXp: 130,
+    icon: '💬',
+    check: (items) => items.filter(i => i.comment && i.comment.trim().length >= 10).length
+  },
+  {
+    id: 'm_rewatch_cult',
+    title: 'Revendo os Melhores',
+    category: 'especial',
+    desc: 'Registre 1 re-assistida (rewatch) ou releitura.',
+    target: 1,
+    rewardXp: 130,
+    icon: '🔄',
+    check: (items) => items.filter(i => i.isRewatch || i.status === 'revisto').length
+  },
+  {
+    id: 'm_multimidia_mix',
+    title: 'Explorador Multimídia',
+    category: 'especial',
+    desc: 'Tenha obras de pelo menos 2 categorias distintas registradas.',
+    target: 2,
+    rewardXp: 160,
+    icon: '🔮',
+    check: (items) => new Set(items.map(i => i.category)).size
+  },
+  {
+    id: 'm_obras_tres',
+    title: 'Colecionador Ativo',
+    category: 'especial',
+    desc: 'Alcance ao menos 3 obras culturais cadastradas no acervo.',
+    target: 3,
+    rewardXp: 150,
+    icon: '📦',
+    check: (items) => items.length
+  },
+  {
+    id: 'm_tempo_dedicado',
+    title: 'Tempo de Qualidade',
+    category: 'especial',
+    desc: 'Acumule 10 horas totais de consumo cultural registrado.',
+    target: 10,
+    rewardXp: 170,
+    icon: '⏳',
+    check: (items) => items.reduce((acc, i) => acc + (i.progress && i.progress.hours ? Number(i.progress.hours) : 0), 0)
+  },
+  {
+    id: 'm_cinco_estrelas',
+    title: 'Caçador de Obras-Primas',
+    category: 'especial',
+    desc: 'Atribua 5 estrelas a 2 obras memoráveis.',
+    target: 2,
+    rewardXp: 150,
+    icon: '💎',
+    check: (items) => items.filter(i => Number(i.rating) === 5).length
+  },
+  {
+    id: 'm_jogo_horas',
+    title: 'Imersão nos Videogames',
+    category: 'jogo',
+    desc: 'Dedique 15 horas ou mais aos seus jogos cadastrados.',
+    target: 15,
+    rewardXp: 170,
+    icon: '🏆',
+    check: (items) => items.filter(i => i.category === 'jogo').reduce((acc, i) => acc + (i.progress && i.progress.hours ? Number(i.progress.hours) : 0), 0)
   }
 ];
 
-// Atividades Iniciais do Feed Social
-const SEED_ACTIVITIES = [
-  {
-    id: 'act_1',
-    userId: 'usr_mariacine',
-    userName: 'Maria Eduarda',
-    userAvatar: '',
-    type: 'review',
-    title: 'avaliou um filme',
-    mediaTitle: 'Blade Runner 2049',
-    coverImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&auto=format&fit=crop&q=80',
-    rating: 5,
-    comment: 'Fotografia magistral de Roger Deakins e atmosfera cyberpunk incomparável.',
-    timeAgo: 'há 2 horas',
-    reactions: { like: 4, applause: 3, fire: 6, userReactions: {} }
-  },
-  {
-    id: 'act_2',
-    userId: 'usr_lucasgames',
-    userName: 'Lucas Gamer',
-    userAvatar: '',
-    type: 'platina',
-    title: 'platinou um jogo',
-    mediaTitle: 'Elden Ring',
-    coverImage: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&auto=format&fit=crop&q=80',
-    rating: 5,
-    comment: '160 horas de exploração pura nas Terras Intermédias. 100% dos troféus conquistados!',
-    timeAgo: 'ontem às 21:40',
-    reactions: { like: 8, applause: 12, fire: 15, userReactions: {} }
-  },
-  {
-    id: 'act_3',
-    userId: 'usr_carolbooks',
-    userName: 'Carol Mendes',
-    userAvatar: '',
-    type: 'list',
-    title: 'criou uma lista temática',
-    mediaTitle: 'Distopias Clássicas e Modernas',
-    coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&auto=format&fit=crop&q=80',
-    rating: 5,
-    comment: 'Uma curadoria especial para quem ama reflexões sobre o futuro e poder.',
-    timeAgo: 'há 2 dias',
-    reactions: { like: 5, applause: 2, fire: 3, userReactions: {} }
-  },
-  {
-    id: 'act_4',
-    userId: 'usr_mariacine',
-    userName: 'Maria Eduarda',
-    userAvatar: '',
-    type: 'review',
-    title: 'analisou uma obra marcante com spoiler',
-    mediaTitle: 'Interestelar',
-    coverImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80',
-    rating: 5,
-    comment: 'A revelação do tesserato na 5ª dimensão permitindo que Cooper envie dados quânticos pelo ponteiro de segundos do relógio da Murphy é extraordinária.',
-    isSpoiler: true,
-    timeAgo: 'há 4 horas',
-    reactions: { like: 7, applause: 4, fire: 9, userReactions: {} }
+function getOrGenerateMonthlyMissions(user) {
+  if (!user) return [];
+
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  // Se o mês virou ou se o usuário ainda não possui missões geradas para o mês atual, reseta e sorteia 4 novas
+  if (!user.monthlyMissionsMonth || user.monthlyMissionsMonth !== currentMonthKey || !user.activeMonthlyMissionIds || user.activeMonthlyMissionIds.length === 0) {
+    const previouslyClaimed = (user.claimedMissions || []).length;
+    user.lifetimeMissionsCompleted = (user.lifetimeMissionsCompleted || 0) + previouslyClaimed;
+
+    user.monthlyMissionsMonth = currentMonthKey;
+    user.claimedMissions = [];
+
+    // Embaralha o catálogo e seleciona 4 missões aleatórias
+    const shuffled = [...MONTHLY_MISSIONS_TEMPLATES].sort(() => 0.5 - Math.random());
+    user.activeMonthlyMissionIds = shuffled.slice(0, 4).map(m => m.id);
+
+    saveCurrentUser();
   }
-];
+
+  const activeMissions = user.activeMonthlyMissionIds.map(id => {
+    return MONTHLY_MISSIONS_TEMPLATES.find(m => m.id === id);
+  }).filter(Boolean);
+
+  if (activeMissions.length < 4) {
+    const missing = MONTHLY_MISSIONS_TEMPLATES.filter(m => !user.activeMonthlyMissionIds.includes(m.id));
+    while (activeMissions.length < 4 && missing.length > 0) {
+      const added = missing.shift();
+      user.activeMonthlyMissionIds.push(added.id);
+      activeMissions.push(added);
+    }
+    saveCurrentUser();
+  }
+
+  return activeMissions;
+}
+
+// Atividades Iniciais do Feed Social
+const SEED_ACTIVITIES = [];
 
 // ==========================================================================
 // Estado Global da Aplicação v2.0
@@ -793,6 +656,10 @@ function loadUsersDatabase() {
     users = [...INITIAL_USERS];
   }
 
+  // Remove permanentemente quaisquer perfis legados de demonstração
+  const demoIds = ['usr_rafael', 'usr_mariacine', 'usr_lucasgames', 'usr_carolbooks'];
+  users = users.filter(u => !demoIds.includes(u.id));
+
   // Migração transparente para estrutura v2.0
   users = users.map(user => {
     // Garante campos de gamificação e listas
@@ -867,10 +734,13 @@ function loadConnectionsDatabase() {
     }
   } else {
     connections = [...INITIAL_CONNECTIONS];
-    localStorage.setItem('keeplay_connections', JSON.stringify(connections));
   }
 
+  const demoIds = ['usr_rafael', 'usr_mariacine', 'usr_lucasgames', 'usr_carolbooks'];
+  connections = connections.filter(c => !demoIds.includes(c.requesterId) && !demoIds.includes(c.addresseeId));
+
   appState.connections = connections;
+  localStorage.setItem('keeplay_connections', JSON.stringify(connections));
 }
 
 function saveConnectionsDatabase(reRender = true) {
@@ -1017,6 +887,10 @@ function loadMessagesDatabase() {
   } else {
     messages = [...INITIAL_MESSAGES];
   }
+
+  const demoIds = ['usr_rafael', 'usr_mariacine', 'usr_lucasgames', 'usr_carolbooks'];
+  messages = messages.filter(m => !demoIds.includes(m.senderId) && !demoIds.includes(m.receiverId));
+
   appState.messages = messages;
   updateChatUnreadBadge();
 }
@@ -1105,29 +979,31 @@ function renderChatsView() {
     loadMessagesDatabase();
 
     const currentId = appState.currentUser.id;
-    const friendIds = getAcceptedFriendIds(currentId);
 
-    // Se o amigo selecionado deixou de ser amigo ou foi bloqueado, desseleciona
-    if (appState.selectedChatFriendId && !friendIds.includes(appState.selectedChatFriendId)) {
+    // Se o contato selecionado foi bloqueado, desseleciona
+    if (appState.selectedChatFriendId && (hasUserBlocked(currentId, appState.selectedChatFriendId) || hasUserBlocked(appState.selectedChatFriendId, currentId))) {
       appState.selectedChatFriendId = null;
     }
 
-    // Se nenhum chat está selecionado mas há amigos com conversa, seleciona o primeiro amigo por padrão
-    if (!appState.selectedChatFriendId && friendIds.length > 0) {
-      // Escolhe o amigo com a mensagem mais recente ou o primeiro da lista
-      let bestFriendId = friendIds[0];
+    // Se nenhum chat está selecionado, busca apenas contatos que possuam histórico de mensagens
+    if (!appState.selectedChatFriendId) {
+      let bestFriendId = null;
       let latestTime = 0;
-      friendIds.forEach(fId => {
-        const msgs = getMessagesBetween(currentId, fId);
+      (appState.users || []).forEach(u => {
+        if (u.id === currentId || hasUserBlocked(currentId, u.id) || hasUserBlocked(u.id, currentId)) return;
+        const msgs = getMessagesBetween(currentId, u.id);
         if (msgs.length > 0) {
           const lastMsgTime = msgs[msgs.length - 1].timestamp;
           if (lastMsgTime > latestTime) {
             latestTime = lastMsgTime;
-            bestFriendId = fId;
+            bestFriendId = u.id;
           }
         }
       });
-      appState.selectedChatFriendId = bestFriendId;
+      // Só auto-seleciona se houver uma conversa com mensagens existente
+      if (bestFriendId && latestTime > 0) {
+        appState.selectedChatFriendId = bestFriendId;
+      }
     }
 
     renderChatFriendsList();
@@ -1135,7 +1011,7 @@ function renderChatsView() {
     const placeholder = document.getElementById('noChatSelectedPlaceholder');
     const activeContainer = document.getElementById('activeChatContainer');
 
-    if (!appState.selectedChatFriendId || friendIds.length === 0) {
+    if (!appState.selectedChatFriendId) {
       if (placeholder) {
         placeholder.style.display = 'flex';
         renderPlaceholderQuickPicks();
@@ -1213,10 +1089,6 @@ function renderChatFriendsList() {
   const currentId = appState.currentUser.id;
   const friendIds = getAcceptedFriendIds(currentId);
 
-  if (counterEl) {
-    counterEl.textContent = `${friendIds.length} ${friendIds.length === 1 ? 'amigo' : 'amigos'}`;
-  }
-
   // Se houver solicitações de amizade recebidas pendentes, exibe banner com atalho rápido
   const incomingRequests = getPendingIncomingRequests(currentId);
   let pendingHtml = '';
@@ -1252,22 +1124,36 @@ function renderChatFriendsList() {
     }
   }
 
-  // Filtra amigos ativos e não bloqueados
-  const friends = (appState.users || []).filter(u => 
-    friendIds.includes(u.id) && !hasUserBlocked(currentId, u.id) && !hasUserBlocked(u.id, currentId)
-  );
+  // Conversas ativas: usuários que possuem pelo menos 1 mensagem trocada OU quem está selecionado no momento
+  const activeChatUsers = (appState.users || []).filter(u => {
+    if (u.id === currentId || hasUserBlocked(currentId, u.id) || hasUserBlocked(u.id, currentId)) return false;
+    const msgs = getMessagesBetween(currentId, u.id);
+    return msgs.length > 0 || u.id === appState.selectedChatFriendId;
+  });
 
-  if (friends.length === 0) {
-    const otherUsers = (appState.users || []).filter(u => u.id !== currentId && !hasUserBlocked(currentId, u.id));
+  if (counterEl) {
+    counterEl.textContent = `${activeChatUsers.length} ${activeChatUsers.length === 1 ? 'conversa' : 'conversas'}`;
+  }
+
+  if (activeChatUsers.length === 0) {
+    // Amigos ou membros disponíveis para iniciar uma conversa rápida
+    const availableFriends = (appState.users || []).filter(u => 
+      friendIds.includes(u.id) && !hasUserBlocked(currentId, u.id) && !hasUserBlocked(u.id, currentId)
+    );
+    const otherUsers = (appState.users || []).filter(u => 
+      u.id !== currentId && !hasUserBlocked(currentId, u.id) && !hasUserBlocked(u.id, currentId)
+    );
+    const suggested = availableFriends.length > 0 ? availableFriends : otherUsers;
+
     container.innerHTML = `
       ${pendingHtml}
       <div class="chats-empty-friends">
         <div class="chats-empty-friends-icon">💬</div>
-        <h4>Inicie uma Conversa</h4>
-        <p>Você pode conversar diretamente com outros exploradores culturais do Keeplay:</p>
+        <h4>Nenhuma Conversa Ativa</h4>
+        <p>Inicie uma nova conversa cultural com seus contatos:</p>
         <div class="chat-suggested-users-wrap">
-          ${otherUsers.map(user => `
-            <div class="chat-suggested-item" onclick="openChatWithUser('${user.id}')" role="button" tabindex="0">
+          ${suggested.slice(0, 5).map(user => `
+            <div class="chat-suggested-item" onclick="selectChatFriend('${user.id}')" role="button" tabindex="0">
               <div class="chat-friend-avatar">
                 ${user.avatar ? `<img src="${user.avatar}" alt="${escapeAttr(user.name)}">` : (user.name ? user.name.charAt(0).toUpperCase() : 'U')}
               </div>
@@ -1275,7 +1161,7 @@ function renderChatFriendsList() {
                 <div class="chat-friend-name">${escapeHtml(user.name)}</div>
                 <div class="chat-last-snippet">@${escapeHtml(user.username)} • ${escapeHtml(user.equippedTitle || 'Explorador')}</div>
               </div>
-              <button type="button" class="btn-suggested-chat-action" onclick="event.stopPropagation(); openChatWithUser('${user.id}')">
+              <button type="button" class="btn-suggested-chat-action" onclick="event.stopPropagation(); selectChatFriend('${user.id}')">
                 <span>💬</span> Conversar
               </button>
             </div>
@@ -1287,26 +1173,26 @@ function renderChatFriendsList() {
   }
 
   const query = (appState.chatSearchQuery || '').toLowerCase().trim();
-  const filteredFriends = friends.filter(f => {
+  const filteredUsers = activeChatUsers.filter(f => {
     if (!query) return true;
     return (f.name && f.name.toLowerCase().includes(query)) ||
            (f.username && f.username.toLowerCase().includes(query));
   });
 
-  if (filteredFriends.length === 0) {
+  if (filteredUsers.length === 0) {
     container.innerHTML = `
       ${pendingHtml}
       <div class="chats-empty-friends" style="padding: 1.5rem 0.5rem;">
         <div style="font-size: 1.8rem; margin-bottom: 0.35rem;">🔍</div>
-        <h4 style="font-size: 0.85rem;">Nenhum amigo encontrado</h4>
-        <p style="font-size: 0.74rem;">Nenhum amigo corresponde a "${escapeHtml(query)}".</p>
+        <h4 style="font-size: 0.85rem;">Nenhuma conversa encontrada</h4>
+        <p style="font-size: 0.74rem;">Nenhum contato corresponde a "${escapeHtml(query)}".</p>
       </div>
     `;
     return;
   }
 
-  // Ordena amigos: quem tem mensagem mais recente fica no topo
-  filteredFriends.sort((a, b) => {
+  // Ordena conversas: quem tem mensagem mais recente fica no topo
+  filteredUsers.sort((a, b) => {
     const msgsA = getMessagesBetween(currentId, a.id);
     const msgsB = getMessagesBetween(currentId, b.id);
     const timeA = msgsA.length > 0 ? msgsA[msgsA.length - 1].timestamp : 0;
@@ -1314,7 +1200,7 @@ function renderChatFriendsList() {
     return timeB - timeA;
   });
 
-  const friendsListHtml = filteredFriends.map(friend => {
+  const friendsListHtml = filteredUsers.map(friend => {
     const msgs = getMessagesBetween(currentId, friend.id);
     const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
     const unreadCount = msgs.filter(m => m.receiverId === currentId && !m.read).length;
@@ -1745,10 +1631,11 @@ function deleteChatWithFriend(friendId) {
 
   saveMessagesDatabase();
 
-  renderChatFriendsList();
   if (appState.selectedChatFriendId === friendId) {
-    renderActiveChat();
+    appState.selectedChatFriendId = null;
   }
+
+  renderChatsView();
   updateChatUnreadBadge();
 
   showToast(
@@ -1772,6 +1659,19 @@ function deleteIndividualMessage(messageId) {
 
   if (appState.messages.length < countBefore) {
     saveMessagesDatabase();
+
+    const currentId = appState.currentUser.id;
+    if (appState.selectedChatFriendId) {
+      const remaining = getMessagesBetween(currentId, appState.selectedChatFriendId);
+      if (remaining.length === 0) {
+        appState.selectedChatFriendId = null;
+        renderChatsView();
+        updateChatUnreadBadge();
+        showToast('Mensagem Excluída', 'Última mensagem removida. O chat foi encerrado.', '🗑️');
+        return;
+      }
+    }
+
     renderActiveChat();
     renderChatFriendsList();
     updateChatUnreadBadge();
@@ -2460,7 +2360,7 @@ function checkAndAwardAchievements(silent = false) {
   const newlyUnlocked = [];
 
   ACHIEVEMENTS_DEF.forEach(ach => {
-    if (!savedUnlocked.includes(ach.id) && ach.check(items)) {
+    if (!savedUnlocked.includes(ach.id) && ach.check(items, appState.currentUser)) {
       savedUnlocked.push(ach.id);
       newlyUnlocked.push(ach);
     }
@@ -2518,7 +2418,7 @@ function renderAchievementsModal() {
     const displayDesc = (isSecret && !isUnlocked) ? '??? Esta conquista é um enigma. Continue registrando e explorando para desvendá-la.' : ach.desc;
     const displayIcon = (isSecret && !isUnlocked) ? '❓' : ach.icon;
 
-    const progress = ach.getProgress ? ach.getProgress(items) : { current: isUnlocked ? 1 : 0, target: 1 };
+    const progress = ach.getProgress ? ach.getProgress(items, appState.currentUser) : { current: isUnlocked ? 1 : 0, target: 1 };
     const pct = isUnlocked ? 100 : Math.min(100, Math.round((progress.current / progress.target) * 100));
 
     const cardClass = isSecret 
@@ -2566,7 +2466,9 @@ function renderMonthlyMissions() {
   const monthTitle = document.getElementById('missionsMonthTitle');
   if (monthTitle) monthTitle.textContent = `Missões Temporárias de ${months[now.getMonth()]}`;
 
-  container.innerHTML = MONTHLY_MISSIONS_POOL.map(m => {
+  const activeMissions = getOrGenerateMonthlyMissions(appState.currentUser);
+
+  container.innerHTML = activeMissions.map(m => {
     const current = m.check(items);
     const target = m.target;
     const isReady = current >= target;
@@ -2633,9 +2535,16 @@ window.claimMonthlyMission = function(missionId, xpAmount) {
 
   appState.currentUser.items.push(bonusItem);
   saveCurrentUser();
+
+  // Verifica se o resgate da missão desbloqueou conquistas de missões!
+  checkAndAwardAchievements(false);
+
   ConfettiEngine.trigger(3000);
   showToast('Missão Resgatada!', `Você ganhou <strong>+${xpAmount} XP</strong>!`, '🎁');
   renderMonthlyMissions();
+  renderGamificationHeader();
+  renderProfileView();
+  renderAchievementsModal();
 
   addActivityFeedEvent({
     type: 'mission',
@@ -4864,6 +4773,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnLogout = document.getElementById('btnLogout');
   if (btnLogout) btnLogout.addEventListener('click', handleLogout);
 
+  const btnProfileLogout = document.getElementById('btnProfileLogout');
+  if (btnProfileLogout) btnProfileLogout.addEventListener('click', handleLogout);
+
   // Navegação Principal (Catálogo | Comunidade | Chats | Perfil)
   const btnViewCatalog = document.getElementById('btnViewCatalog');
   if (btnViewCatalog) btnViewCatalog.addEventListener('click', () => switchView('catalog'));
@@ -4876,19 +4788,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const btnViewProfile = document.getElementById('btnViewProfile');
   if (btnViewProfile) btnViewProfile.addEventListener('click', () => switchView('profile'));
-
-  // Navegação Inferior para Celular (Mobile Bottom Dock)
-  const mobileNavCatalog = document.getElementById('mobileNavCatalog');
-  if (mobileNavCatalog) mobileNavCatalog.addEventListener('click', () => switchView('catalog'));
-
-  const mobileNavCommunity = document.getElementById('mobileNavCommunity');
-  if (mobileNavCommunity) mobileNavCommunity.addEventListener('click', () => switchView('community'));
-
-  const mobileNavChats = document.getElementById('mobileNavChats');
-  if (mobileNavChats) mobileNavChats.addEventListener('click', () => switchView('chats'));
-
-  const mobileNavProfile = document.getElementById('mobileNavProfile');
-  if (mobileNavProfile) mobileNavProfile.addEventListener('click', () => switchView('profile'));
 
   // Controles e Eventos do Módulo de Chats
   const chatFriendsSearchInput = document.getElementById('chatFriendsSearchInput');
@@ -5482,96 +5381,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Inicializar Sessão
   checkSession();
-
-  // Modal de Acesso pelo Celular & QR Code
-  initMobileAccessModule();
 });
-
-// ==========================================================================
-// Módulo de Acesso Mobile (Wi-Fi & QR Code Dinâmico)
-// ==========================================================================
-
-let qrCodeInstance = null;
-
-async function getMobileAccessUrl() {
-  // Se já estiver sendo servido via HTTP/HTTPS e não em localhost
-  if (window.location.protocol.startsWith('http')) {
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return window.location.origin;
-    }
-  }
-
-  // Tenta consultar a API do servidor local para pegar o IP exato
-  try {
-    const res = await fetch('/api/info', { cache: 'no-cache' });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.url) return data.url;
-    }
-  } catch (e) {}
-
-  // Fallback padrão com o IP da rede local identificado
-  return 'http://192.168.0.17:8080';
-}
-
-async function openMobileAccessModal() {
-  const url = await getMobileAccessUrl();
-  const inputEl = document.getElementById('mobileAccessUrlInput');
-  if (inputEl) inputEl.value = url;
-
-  const container = document.getElementById('mobileQrContainer');
-  if (container) {
-    container.innerHTML = '';
-    if (typeof QRCode !== 'undefined') {
-      qrCodeInstance = new QRCode(container, {
-        text: url,
-        width: 190,
-        height: 190,
-        colorDark: '#080a0f',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    } else {
-      container.innerHTML = `<div style="padding: 1rem; color: #111; font-size: 0.85rem; word-break: break-all;">${url}</div>`;
-    }
-  }
-
-  openModal('mobileAccessModal');
-}
-
-function copyMobileAccessUrl() {
-  const inputEl = document.getElementById('mobileAccessUrlInput');
-  if (!inputEl) return;
-  const url = inputEl.value;
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(() => {
-      showToast('Link Copiado!', 'Endereço copiado para a área de transferência.', '📋');
-    }).catch(() => {
-      inputEl.select();
-      document.execCommand('copy');
-      showToast('Link Copiado!', 'Endereço copiado para a área de transferência.', '📋');
-    });
-  } else {
-    inputEl.select();
-    document.execCommand('copy');
-    showToast('Link Copiado!', 'Endereço copiado para a área de transferência.', '📋');
-  }
-}
-
-function initMobileAccessModule() {
-  const btnOpenMobileModal = document.getElementById('btnOpenMobileModal');
-  const btnCloseMobileModal = document.getElementById('btnCloseMobileModal');
-  const btnOkMobileModal = document.getElementById('btnOkMobileModal');
-  const btnCopyMobileUrl = document.getElementById('btnCopyMobileUrl');
-
-  if (btnOpenMobileModal) btnOpenMobileModal.addEventListener('click', openMobileAccessModal);
-  if (btnCloseMobileModal) btnCloseMobileModal.addEventListener('click', () => closeModal('mobileAccessModal'));
-  if (btnOkMobileModal) btnOkMobileModal.addEventListener('click', () => closeModal('mobileAccessModal'));
-  if (btnCopyMobileUrl) btnCopyMobileUrl.addEventListener('click', copyMobileAccessUrl);
-
-  // Registro de Service Worker para suporte PWA no celular
-  if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  }
-}

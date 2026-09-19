@@ -6,11 +6,7 @@
   <title>Keeplay - Diário Cultural, Gamificação & Comunidade</title>
   <meta name="description" content="Acompanhe séries, filmes, livros e jogos com status específicos, diário de consumo, missões mensais, conquistas secretas, listas personalizadas, feed de amigos e retrospectiva Wrapped no Keeplay.">
   <meta name="theme-color" content="#080a0f">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Keeplay">
-  <meta name="mobile-web-app-capable" content="yes">
-  <link rel="manifest" href="manifest.json">
+
   
   <!-- Fontes Google: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -94,6 +90,11 @@
               </button>
             </span>
           </label>
+          <div class="terms-pdf-actions" style="margin-top: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="termos_lgpd.pdf" target="_blank" class="btn-terms-pdf-link" id="btnOpenLgpdPdf" title="Abrir documento oficial em PDF">
+              📄 Abrir Termos & LGPD (PDF)
+            </a>
+          </div>
           <div class="terms-badge-hint">
             <span>🛡️</span> Seus dados protegidos conforme a Lei Geral de Proteção de Dados (LGPD).
           </div>
@@ -167,20 +168,15 @@
           <button id="btnOpenCsvModal" class="btn-icon-text" title="Importar/Exportar dados em CSV ou JSON">
             <span>📥 Dados</span>
           </button>
-
-          <!-- Acessar no Celular (QR Code & Link) -->
-          <button id="btnOpenMobileModal" class="btn-icon-text btn-mobile-access" title="Acessar pelo Celular / Ver QR Code">
-            <span>📱 Celular</span>
-          </button>
           
           <!-- Atalho para Perfil -->
           <button id="navProfileShortcut" class="nav-profile-btn" title="Ir para Meu Perfil">
-            <div class="nav-avatar-mini" id="navAvatarMini">R</div>
-            <span id="navUsernameText">Rafael</span>
+            <div class="nav-avatar-mini" id="navAvatarMini">👤</div>
+            <span id="navUsernameText">Perfil</span>
           </button>
 
           <button id="btnLogout" class="btn-logout" title="Sair da sua conta">
-            Sair
+            <span>🚪</span> Sair
           </button>
         </div>
       </div>
@@ -444,15 +440,15 @@
           <!-- Card de Pré-visualização do Perfil -->
           <div class="profile-preview-card">
             <div class="profile-card-avatar-wrapper">
-              <div class="profile-card-avatar" id="cardAvatarPreview">R</div>
+              <div class="profile-card-avatar" id="cardAvatarPreview">👤</div>
             </div>
 
-            <h3 id="cardProfileName">Rafael</h3>
-            <div class="profile-preview-user" id="cardProfileUsername">@rafael</div>
+            <h3 id="cardProfileName">Meu Perfil</h3>
+            <div class="profile-preview-user" id="cardProfileUsername">@usuario</div>
             <div class="profile-equipped-title" id="cardProfileTitle">⭐ Iniciante Curioso</div>
             
             <p class="profile-preview-bio" id="cardProfileBio">
-              Entusiasta de séries, ficção científica, livros envolventes e games épicos.
+              Seja bem-vindo ao seu espaço cultural no Keeplay!
             </p>
 
             <div class="profile-stats-grid">
@@ -482,10 +478,15 @@
               </div>
             </div>
 
-            <!-- Botão de Acesso Direto ao Wrapped no Card -->
-            <button type="button" id="btnCardOpenWrapped" class="btn-wrapped-card-action">
-              <span>✨ Ver Meu Wrapped Cultural</span>
-            </button>
+            <!-- Botões de Ação no Card do Perfil -->
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
+              <button type="button" id="btnCardOpenWrapped" class="btn-wrapped-card-action">
+                <span>✨ Ver Meu Wrapped Cultural</span>
+              </button>
+              <button type="button" id="btnProfileLogout" class="btn-secondary" style="width: 100%; border-color: rgba(239, 68, 68, 0.35); color: var(--danger); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1rem;">
+                <span>🚪</span> Sair da Conta
+              </button>
+            </div>
           </div>
 
           <!-- Formulário de Edição do Perfil -->
@@ -1154,6 +1155,7 @@
           <button type="button" class="tab-btn" data-ach-cat="livro">📚 Livros</button>
           <button type="button" class="tab-btn" data-ach-cat="jogo">🎮 Jogos</button>
           <button type="button" class="tab-btn" data-ach-cat="especial">🏆 Especiais</button>
+          <button type="button" class="tab-btn" data-ach-cat="missoes">🎯 Missões</button>
           <button type="button" class="tab-btn" data-ach-cat="secreta">🤫 Secretas</button>
         </div>
 
@@ -1378,6 +1380,9 @@
       </div>
 
       <div class="modal-footer terms-modal-footer">
+        <a href="termos_lgpd.pdf" target="_blank" class="btn-icon-text" id="btnDownloadLgpdPdf" title="Visualizar ou baixar arquivo oficial em PDF" style="text-decoration: none;">
+          <span>📄</span> Abrir PDF Oficial (LGPD)
+        </a>
         <button type="button" id="btnCancelTermsModal" class="btn-icon-text">Fechar</button>
         <button type="button" id="btnAcceptTermsFromModal" class="btn-primary" style="width: auto; gap: 0.5rem;">
           <span>✓</span> Concordo e Aceito os Termos
@@ -1386,109 +1391,10 @@
     </div>
   </div>
 
-  <!-- ==========================================
-       Modal de Acesso pelo Celular (Wi-Fi & QR Code)
-       ========================================== -->
-  <div id="mobileAccessModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="mobileAccessTitle">
-    <div class="modal-card mobile-access-modal-card">
-      <div class="modal-header">
-        <div class="mobile-access-title-wrap">
-          <span class="mobile-access-icon">📱</span>
-          <div>
-            <h3 id="mobileAccessTitle">Acessar no Celular</h3>
-            <p class="mobile-access-subtitle">Use o Keeplay no seu smartphone na mesma rede Wi-Fi</p>
-          </div>
-        </div>
-        <button type="button" id="btnCloseMobileModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
-      </div>
-
-      <div class="modal-body mobile-access-modal-body">
-        <!-- Card com QR Code Dinâmico -->
-        <div class="mobile-qr-section">
-          <div class="mobile-qr-card">
-            <div id="mobileQrContainer"></div>
-            <div class="mobile-qr-overlay-logo">✦</div>
-          </div>
-          <p class="mobile-qr-scan-instruction">
-            📸 Aponte a <strong>câmera do seu celular</strong> para escanear e abrir instantaneamente
-          </p>
-        </div>
-
-        <!-- Endereço e Botão Copiar -->
-        <div class="mobile-url-box">
-          <label for="mobileAccessUrlInput" class="form-label" style="margin-bottom: 0.35rem;">
-            Endereço de Acesso na Rede Local (Wi-Fi)
-          </label>
-          <div class="mobile-url-input-wrap">
-            <input type="text" id="mobileAccessUrlInput" class="input-field mobile-url-input" readonly value="http://192.168.0.17:8080">
-            <button type="button" id="btnCopyMobileUrl" class="btn-primary btn-copy-url">
-              <span>📋 Copiar</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Passo a Passo Ilustrado -->
-        <div class="mobile-steps-grid">
-          <div class="mobile-step-card">
-            <div class="step-badge">1</div>
-            <div class="step-content">
-              <strong>Mesmo Wi-Fi</strong>
-              <p>Conecte o smartphone na mesma rede sem fio deste computador.</p>
-            </div>
-          </div>
-          <div class="mobile-step-card">
-            <div class="step-badge">2</div>
-            <div class="step-content">
-              <strong>Servidor Ativo</strong>
-              <p>Execute <code>iniciar_servidor_celular.bat</code> na pasta do projeto.</p>
-            </div>
-          </div>
-          <div class="mobile-step-card">
-            <div class="step-badge">3</div>
-            <div class="step-content">
-              <strong>Adicionar como App</strong>
-              <p>No Chrome/Safari, toque em "Adicionar à Tela de Início" para ter ícone de app!</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; padding: 1rem 1.5rem; border-top: 1px solid var(--border-subtle); background: rgba(0,0,0,0.2);">
-        <button type="button" id="btnOkMobileModal" class="btn-primary" style="width: auto; padding: 0.6rem 1.75rem;">
-          Entendido
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Barra de Navegação Inferior Fixa para Celular (Bottom Dock) -->
-  <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navegação Mobile">
-    <button type="button" class="mobile-nav-btn active" id="mobileNavCatalog">
-      <span class="mobile-nav-icon">📚</span>
-      <span class="mobile-nav-label">Catálogo</span>
-    </button>
-    <button type="button" class="mobile-nav-btn" id="mobileNavCommunity">
-      <span class="mobile-nav-icon">👥</span>
-      <span class="mobile-nav-label">Comunidade</span>
-    </button>
-    <button type="button" class="mobile-nav-btn" id="mobileNavChats">
-      <div class="mobile-nav-icon-wrap">
-        <span class="mobile-nav-icon">💬</span>
-        <span class="badge-pill mobile-chat-badge" id="mobileUnreadChatsBadge" style="display: none;">0</span>
-      </div>
-      <span class="mobile-nav-label">Chats</span>
-    </button>
-    <button type="button" class="mobile-nav-btn" id="mobileNavProfile">
-      <span class="mobile-nav-icon">👤</span>
-      <span class="mobile-nav-label">Meu Perfil</span>
-    </button>
-  </nav>
-
   <!-- Container de Toasts Dinâmicos -->
   <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
 
-  <!-- Scripts: QR Code & Lógica Principal -->
-  <script src="qrcode.min.js"></script>
+  <!-- Scripts: Lógica Principal -->
   <script src="app.js"></script>
 </body>
 </html>

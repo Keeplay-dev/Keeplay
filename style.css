@@ -570,16 +570,49 @@ button {
 }
 
 .btn-logout {
-  background: transparent;
-  color: var(--text-muted);
-  padding: 0.5rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 0.5rem 0.85rem;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  cursor: pointer;
 }
 
 .btn-logout:hover {
-  color: var(--danger);
-  background: rgba(239, 68, 68, 0.12);
+  color: #ffffff;
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35);
+}
+
+.btn-terms-pdf-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #818cf8;
+  text-decoration: none;
+  padding: 0.3rem 0.65rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.btn-terms-pdf-link:hover {
+  background: rgba(99, 102, 241, 0.28);
+  border-color: rgba(99, 102, 241, 0.6);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 /* Conteúdo Principal */
@@ -5425,283 +5458,7 @@ input:checked + .slider:before {
   background: rgba(0, 0, 0, 0.2);
 }
 
-/* ==========================================================================
-   MODAL DE ACESSO PELO CELULAR & QR CODE DINÂMICO
-   ========================================================================== */
-.btn-mobile-access {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(168, 85, 247, 0.18));
-  border: 1px solid rgba(168, 85, 247, 0.4);
-  color: #e0e7ff;
-}
 
-.btn-mobile-access:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.35));
-  border-color: rgba(168, 85, 247, 0.7);
-  box-shadow: 0 0 16px rgba(168, 85, 247, 0.35);
-  color: #ffffff;
-}
-
-.mobile-access-modal-card {
-  max-width: 500px;
-}
-
-.mobile-access-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.mobile-access-icon {
-  font-size: 1.6rem;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.3);
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.mobile-access-subtitle {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin-top: 0.15rem;
-}
-
-.mobile-qr-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.35rem;
-}
-
-.mobile-qr-card {
-  position: relative;
-  background: #ffffff;
-  padding: 12px;
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(99, 102, 241, 0.3);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mobile-qr-canvas {
-  display: block;
-  border-radius: 10px;
-  max-width: 100%;
-}
-
-.mobile-qr-overlay-logo {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--accent-gradient);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  font-size: 1.1rem;
-  font-weight: 800;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
-  border: 3px solid #ffffff;
-  pointer-events: none;
-}
-
-.mobile-qr-scan-instruction {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  margin-top: 0.85rem;
-  text-align: center;
-}
-
-.mobile-url-box {
-  background: rgba(10, 13, 20, 0.6);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 0.85rem 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.mobile-url-input-wrap {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.mobile-url-input {
-  font-family: monospace;
-  font-size: 0.95rem;
-  color: #38bdf8;
-  letter-spacing: 0.02em;
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.btn-copy-url {
-  width: auto;
-  white-space: nowrap;
-  margin-top: 0;
-  padding: 0.75rem 1.15rem;
-  font-size: 0.86rem;
-}
-
-.mobile-steps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.65rem;
-}
-
-.mobile-step-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 0.75rem 0.65rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.step-badge {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--accent-primary);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.step-content strong {
-  display: block;
-  font-size: 0.78rem;
-  color: var(--text-primary);
-  margin-bottom: 0.15rem;
-}
-
-.step-content p {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  line-height: 1.35;
-  margin: 0;
-}
-
-.step-content code {
-  font-size: 0.68rem;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 1px 3px;
-  border-radius: 3px;
-}
-
-/* ==========================================================================
-   BARRA DE NAVEGAÇÃO INFERIOR PARA CELULAR (BOTTOM DOCK)
-   ========================================================================== */
-.mobile-bottom-nav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 64px;
-  background: rgba(9, 12, 18, 0.94);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 95;
-  padding: 0 0.5rem;
-  box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.5);
-  justify-content: space-around;
-  align-items: center;
-}
-
-/* Suporte para Safe Area no iPhone com notch */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .mobile-bottom-nav {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    height: calc(64px + env(safe-area-inset-bottom, 0px));
-  }
-}
-
-.mobile-nav-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
-  height: 100%;
-  background: transparent;
-  color: var(--text-muted);
-  border: none;
-  position: relative;
-  transition: all var(--transition-fast);
-  padding: 0.35rem 0.2rem;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.mobile-nav-icon {
-  font-size: 1.35rem;
-  line-height: 1;
-  transition: transform var(--transition-bounce), filter var(--transition-fast);
-}
-
-.mobile-nav-icon-wrap {
-  position: relative;
-  display: inline-flex;
-}
-
-.mobile-chat-badge {
-  position: absolute;
-  top: -4px;
-  right: -8px;
-  background: var(--accent-secondary);
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 0.1rem 0.35rem;
-  border-radius: var(--radius-full);
-  box-shadow: 0 0 8px rgba(236, 72, 153, 0.7);
-  line-height: 1;
-}
-
-.mobile-nav-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  transition: color var(--transition-fast);
-}
-
-.mobile-nav-btn.active {
-  color: #ffffff;
-}
-
-.mobile-nav-btn.active .mobile-nav-icon {
-  transform: translateY(-2px) scale(1.15);
-  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.6));
-}
-
-.mobile-nav-btn.active .mobile-nav-label {
-  color: #c7d2fe;
-  font-weight: 700;
-}
-
-.mobile-nav-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  width: 20px;
-  height: 3px;
-  border-radius: var(--radius-full);
-  background: var(--accent-gradient);
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
-}
 
 /* ==========================================================================
    REGRAS DE RESPONSIVIDADE & ADAPTAÇÃO MOBILE (MEDIA QUERIES)
@@ -5767,20 +5524,8 @@ input:checked + .slider:before {
 /* --------------------------------------------------------------------------
    Smartphones & Dispositivos Móveis (<= 768px)
    -------------------------------------------------------------------------- */
-@media (max-width: 768px) {
-  /* Exibir Dock Inferior Mobile */
-  .mobile-bottom-nav {
-    display: flex;
-  }
-
-  /* Ocultar Seletor de Abas no Topo (substituído pelo Dock Inferior) */
-  .nav-views-switcher {
-    display: none !important;
-  }
-
-  /* Ajuste de Espaçamento no Container Principal para não sobrepor o dock */
   .main-content {
-    padding: 1.25rem 1rem 6.5rem;
+    padding: 1.5rem 1rem 3.5rem;
   }
 
   /* Topbar Compacta para Mobile */
@@ -5831,9 +5576,7 @@ input:checked + .slider:before {
     font-size: 0.78rem;
   }
 
-  /* Oculta textos longos de botões secundários para caber no celular */
-  #btnOpenCsvModal span,
-  #btnOpenMobileModal span {
+  #btnOpenCsvModal span {
     font-size: 0.78rem;
   }
 
