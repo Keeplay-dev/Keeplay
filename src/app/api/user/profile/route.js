@@ -25,7 +25,12 @@ export async function GET(req) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
-    const [rows] = await pool.query("SELECT * FROM v_user_stats WHERE user_id = ?", [userAuth.id]);
+    const [rows] = await pool.query(`
+      SELECT v.*, u.bio, u.avatar_url, u.is_private
+      FROM v_user_stats v
+      JOIN users u ON u.id = v.user_id
+      WHERE v.user_id = ?
+    `, [userAuth.id]);
     if (rows.length === 0) {
       return NextResponse.json({ error: "Perfil não encontrado" }, { status: 404 });
     }
@@ -54,11 +59,23 @@ export async function GET(req) {
       [userAuth.id]
     );
 
+    // Calculate average rating
+    const [avgRows] = await pool.query(`
+      SELECT ROUND(AVG(rating), 1) as avg_rating
+      FROM media_items
+      WHERE user_id = ? AND rating IS NOT NULL AND rating > 0
+    `, [userAuth.id]);
+    const averageRating = avgRows[0]?.avg_rating ? String(avgRows[0].avg_rating) : "0.0";
+
     return NextResponse.json({
       profile: {
         ...userStats,
-        equipped_title: autoTitle,
+        level: currentLevel,
         current_level: currentLevel,
+        equipped_title: autoTitle,
+        average_rating: averageRating,
+        hours_spent: userStats.total_hours_invested ? `${Math.round(Number(userStats.total_hours_invested))}h` : "0h",
+        total_items: userStats.total_media_items || 0,
         next_title: nextTitle,
         unlocked_titles: unlockedTitles.map(t => t.title_name)
       },
@@ -93,10 +110,20 @@ export async function PUT(req) {
 
     await pool.query(updateQuery, params);
 
-    const [rows] = await pool.query("SELECT * FROM v_user_stats WHERE user_id = ?", [userAuth.id]);
+    const [rows] = await pool.query(`
+      SELECT v.*, u.bio, u.avatar_url, u.is_private
+      FROM v_user_stats v
+      JOIN users u ON u.id = v.user_id
+      WHERE v.user_id = ?
+    `, [userAuth.id]);
     const updatedProfile = rows[0] || null;
     if (updatedProfile) {
+      const currentLevel = Math.floor(((updatedProfile.total_xp || 0)) / 500) + 1;
       updatedProfile.equipped_title = autoTitle;
+      updatedProfile.level = currentLevel;
+      updatedProfile.current_level = currentLevel;
+      updatedProfile.hours_spent = updatedProfile.total_hours_invested ? `${Math.round(Number(updatedProfile.total_hours_invested))}h` : "0h";
+      updatedProfile.total_items = updatedProfile.total_media_items || 0;
     }
 
     return NextResponse.json({ success: true, profile: updatedProfile });

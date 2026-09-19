@@ -55,6 +55,10 @@ export default function CommunityView() {
 
   useEffect(() => {
     fetchData(feedFilter);
+
+    const onFeedUpdated = () => fetchData(feedFilter);
+    window.addEventListener("keeplay:feed-updated", onFeedUpdated);
+    return () => window.removeEventListener("keeplay:feed-updated", onFeedUpdated);
   }, [feedFilter]);
 
   // Aceitar Pedido
@@ -290,6 +294,8 @@ export default function CommunityView() {
       zerou: "completou / zerou",
       platinou: "platinou 100%",
       achievement_unlocked: "desbloqueou uma conquista",
+      mission: "completou uma missão sazonal",
+      wrapped: "celebrou sua Retrospectiva Wrapped 🎁",
       abandonou: "abandonou",
       comecou: "começou a acompanhar"
     };
@@ -779,32 +785,49 @@ export default function CommunityView() {
                             width: "85px",
                             height: "125px",
                             borderRadius: "8px",
-                            background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(236,72,153,0.2))",
-                            border: "1px solid var(--border-subtle)",
+                            background: item.activity_type === 'wrapped' 
+                              ? "linear-gradient(135deg, rgba(236,72,153,0.3), rgba(168,85,247,0.3))"
+                              : "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(236,72,153,0.2))",
+                            border: item.activity_type === 'wrapped' ? "1px solid rgba(236, 72, 153, 0.5)" : "1px solid var(--border-subtle)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             fontSize: "2rem",
                             flexShrink: 0
                           }}>
-                            {categoryIcon(category)}
+                            {item.activity_type === 'wrapped' ? "🎁" : categoryIcon(category)}
                           </div>
                         )}
 
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ marginBottom: "0.4rem" }}>
-                            <span style={{
-                              fontSize: "0.72rem",
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              background: "rgba(99, 102, 241, 0.2)",
-                              color: "#a5b4fc",
-                              padding: "0.2rem 0.55rem",
-                              borderRadius: "4px",
-                              border: "1px solid rgba(99, 102, 241, 0.35)"
-                            }}>
-                              {categoryIcon(category)} {category}
-                            </span>
+                            {item.activity_type === 'wrapped' ? (
+                              <span style={{
+                                fontSize: "0.72rem",
+                                fontWeight: 800,
+                                textTransform: "uppercase",
+                                background: "linear-gradient(135deg, rgba(236,72,153,0.25), rgba(168,85,247,0.25))",
+                                color: "#f472b6",
+                                padding: "0.2rem 0.65rem",
+                                borderRadius: "12px",
+                                border: "1px solid rgba(236, 72, 153, 0.4)"
+                              }}>
+                                🎁 KEEPLAY WRAPPED 2026
+                              </span>
+                            ) : (
+                              <span style={{
+                                fontSize: "0.72rem",
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                background: "rgba(99, 102, 241, 0.2)",
+                                color: "#a5b4fc",
+                                padding: "0.2rem 0.55rem",
+                                borderRadius: "4px",
+                                border: "1px solid rgba(99, 102, 241, 0.35)"
+                              }}>
+                                {categoryIcon(category)} {category}
+                              </span>
+                            )}
                           </div>
 
                           <h3 style={{

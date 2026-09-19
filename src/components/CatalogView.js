@@ -82,6 +82,25 @@ const getStatusLabel = (category, statusValue) => {
   return found ? found.label.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').trim() : statusValue;
 };
 
+// Helpers de Nível e Título Honorífico
+const getLevel = (xp) => Math.floor((Math.max(0, Number(xp) || 0)) / 500) + 1;
+const getTitleByXp = (xp) => {
+  const lvl = getLevel(xp);
+  if (lvl >= 20) return "Patrono Eterno das Artes";
+  if (lvl >= 15) return "Lenda Cultural";
+  if (lvl >= 12) return "Sábio Multimídia";
+  if (lvl >= 10) return "Guardião do Acervo";
+  if (lvl >= 9) return "Mestre das Narrativas";
+  if (lvl >= 8) return "Conhecedor Ilustre";
+  if (lvl >= 7) return "Polímata Cultural";
+  if (lvl >= 6) return "Maratonista de Elite";
+  if (lvl >= 5) return "Curador Experiente";
+  if (lvl >= 4) return "Crítico Cultural";
+  if (lvl >= 3) return "Apreciador das Artes";
+  if (lvl >= 2) return "Explorador Cultural";
+  return "Iniciante Curioso";
+};
+
 export default function CatalogView() {
   const [activeSubTab, setActiveSubTab] = useState("catalog");
   const [profile, setProfile] = useState(null);
@@ -109,6 +128,19 @@ export default function CatalogView() {
 
   useEffect(() => {
     setMounted(true);
+    const handleGamificationUpdated = () => {
+      fetch("/api/user/profile")
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.profile) setProfile(data.profile);
+        })
+        .catch(err => console.error("Erro ao sincronizar perfil:", err));
+    };
+
+    window.addEventListener("keeplay:gamification-updated", handleGamificationUpdated);
+    return () => {
+      window.removeEventListener("keeplay:gamification-updated", handleGamificationUpdated);
+    };
   }, []);
 
   const fetchData = useCallback(async () => {
@@ -490,6 +522,10 @@ export default function CatalogView() {
     return createPortal(modalContent, document.body);
   };
 
+  const userXp = Number(profile?.total_xp) || 0;
+  const userLevel = profile?.current_level || profile?.level || getLevel(userXp);
+  const userTitle = profile?.equipped_title || getTitleByXp(userXp);
+
   return (
     <div id="catalogView">
 
@@ -512,24 +548,32 @@ export default function CatalogView() {
         <div className="hero-profile-summary">
           <div className="hero-avatar-wrapper">
             <div className="hero-avatar-img">
-              {profile?.name ? profile.name.charAt(0).toUpperCase() : "U"}
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile?.name || "Avatar"}
+                  style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                />
+              ) : (
+                profile?.name ? profile.name.charAt(0).toUpperCase() : "U"
+              )}
             </div>
           </div>
           <div className="hero-welcome">
             <h2>Olá, <span>{profile?.name || "Usuário"}</span>! 👋</h2>
             <div className="hero-title-badge-wrap">
-              <span className="equipped-title-badge">👑 {profile?.equipped_title || "Iniciante Curioso"}</span>
-              <span className="hero-level-desc">Nível {profile?.level || 1} • Registre para subir de patente</span>
+              <span className="equipped-title-badge">👑 {userTitle}</span>
+              <span className="hero-level-desc">Nível {userLevel} • Registre para subir de patente</span>
             </div>
             <p className="hero-bio">{profile?.bio || "Nenhuma biografia disponível."}</p>
           </div>
         </div>
 
         <div className="hero-stats">
-          <div className="stat-pill"><div className="stat-value">{profile?.total_items || items.length}</div><div className="stat-label">Registros</div></div>
-          <div className="stat-pill"><div className="stat-value">{profile?.average_rating || "0.0"}</div><div className="stat-label">Média ⭐</div></div>
-          <div className="stat-pill"><div className="stat-value">{profile?.hours_spent || "0h"}</div><div className="stat-label">Tempo Dedicado</div></div>
-          <div className="stat-pill"><div className="stat-value">{profile?.total_xp || 0}</div><div className="stat-label">XP Total</div></div>
+          <div className="stat-pill"><div className="stat-value">{profile?.total_items ?? profile?.total_media_items ?? items.length}</div><div className="stat-label">Registros</div></div>
+          <div className="stat-pill"><div className="stat-value">{profile?.average_rating || (items.filter(i => Number(i.rating) > 0).length > 0 ? (items.filter(i => Number(i.rating) > 0).reduce((a, b) => a + Number(b.rating), 0) / items.filter(i => Number(i.rating) > 0).length).toFixed(1) : "0.0")}</div><div className="stat-label">Média ⭐</div></div>
+          <div className="stat-pill"><div className="stat-value">{profile?.hours_spent || (profile?.total_hours_invested ? `${Math.round(Number(profile.total_hours_invested))}h` : "0h")}</div><div className="stat-label">Tempo Dedicado</div></div>
+          <div className="stat-pill"><div className="stat-value">{userXp}</div><div className="stat-label">XP Total</div></div>
         </div>
       </section>
 
