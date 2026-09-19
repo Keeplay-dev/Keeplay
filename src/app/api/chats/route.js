@@ -25,20 +25,12 @@ export async function GET(req) {
 
     const [rows] = await pool.query(`
       WITH all_contacts AS (
-        -- Amigos aceitos em conexões
+        -- Apenas amigos confirmados (status = 'accepted')
         SELECT 
           CASE WHEN requester_id = ? THEN addressee_id ELSE requester_id END as contact_id,
           MAX(created_at) as connected_at
         FROM user_connections
         WHERE (requester_id = ? OR addressee_id = ?) AND status = 'accepted'
-        GROUP BY contact_id
-        UNION
-        -- Qualquer usuário com quem mensagens foram trocadas
-        SELECT 
-          CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END as contact_id,
-          MAX(created_at) as connected_at
-        FROM chat_messages
-        WHERE sender_id = ? OR receiver_id = ?
         GROUP BY contact_id
       ),
       unique_contacts AS (
@@ -73,7 +65,7 @@ export async function GET(req) {
       JOIN users u ON u.id = c.contact_id
       LEFT JOIN ranked_messages rm ON rm.rn = 1 AND (rm.sender_id = u.id OR rm.receiver_id = u.id)
       ORDER BY COALESCE(rm.created_at, c.connected_at) DESC
-    `, [user.id, user.id, user.id, user.id, user.id, user.id, user.id, user.id]);
+    `, [user.id, user.id, user.id, user.id, user.id]);
 
     return NextResponse.json({ chats: rows });
   } catch (error) {

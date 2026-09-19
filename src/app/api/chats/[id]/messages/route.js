@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
@@ -51,6 +51,22 @@ export async function POST(req, { params }) {
     const { message_text } = await req.json();
 
     if (!message_text?.trim()) return NextResponse.json({ error: "Mensagem vazia" }, { status: 400 });
+
+    // Verificar se os usuários são amigos formalmente aceitos
+    const [conn] = await pool.query(
+      `SELECT id FROM user_connections 
+       WHERE ((requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?))
+         AND status = 'accepted'
+       LIMIT 1`,
+      [user.id, receiverId, receiverId, user.id]
+    );
+
+    if (conn.length === 0) {
+      return NextResponse.json(
+        { error: "Você só pode enviar mensagens para amigos conectados." },
+        { status: 403 }
+      );
+    }
 
     const id = uuidv4();
     await pool.query(

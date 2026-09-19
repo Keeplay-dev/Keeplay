@@ -44,7 +44,7 @@ export default function ChatsView() {
         if (chatsRes.ok) {
           const data = await chatsRes.json();
 
-          chatList = (data.chats || []).map(chat => {
+              chatList = (data.chats || []).map(chat => {
             const isUnread = chat.last_message_is_read === 0 && chat.sender_id !== loggedUserId;
 
             return {
@@ -55,7 +55,8 @@ export default function ChatsView() {
               equipped_title: chat.other_user_title,
               last_message: chat.last_message_text,
               last_message_time: chat.last_message_time,
-              unread_count: isUnread ? 1 : 0
+              unread_count: isUnread ? 1 : 0,
+              is_friend: true
             };
           });
         }
@@ -65,7 +66,17 @@ export default function ChatsView() {
           let found = chatList.find(c => c.id === paramUserId);
           if (!found) {
             try {
-              const uRes = await fetch(`/api/catalog?userId=${paramUserId}`);
+              const [uRes, commRes] = await Promise.all([
+                fetch(`/api/catalog?userId=${paramUserId}`),
+                fetch("/api/community")
+              ]);
+
+              let isConfirmedFriend = false;
+              if (commRes.ok) {
+                const commData = await commRes.json();
+                isConfirmedFriend = (commData.friends || []).some(f => f.id === paramUserId);
+              }
+
               if (uRes.ok) {
                 const uData = await uRes.json();
                 if (uData.user) {
@@ -77,7 +88,8 @@ export default function ChatsView() {
                     equipped_title: uData.user.equipped_title,
                     last_message: null,
                     last_message_time: new Date().toISOString(),
-                    unread_count: 0
+                    unread_count: 0,
+                    is_friend: isConfirmedFriend
                   };
                   chatList = [found, ...chatList];
                 }
@@ -145,6 +157,11 @@ export default function ChatsView() {
 
     const friendId = selectedFriend.id;
 
+    if (selectedFriend.is_friend === false) {
+      alert("Você só pode trocar mensagens com amigos conectados. Envie uma solicitação de amizade na aba Comunidade!");
+      return;
+    }
+
     // Atualização Otimista: coloca a mensagem na tela antes mesmo da API responder
     const tempMessage = {
       id: "temp-" + Date.now(),
@@ -156,11 +173,18 @@ export default function ChatsView() {
     setMessages(prev => [...prev, tempMessage]);
 
     try {
-      await fetch(`/api/chats/${friendId}/messages`, {
+      const res = await fetch(`/api/chats/${friendId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message_text: content }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || "Não foi possível enviar a mensagem.");
+        setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+        return;
+      }
+
       // Ao enviar, atualiza também a prévia na sidebar localmente
       setFriends(prev => prev.map(f =>
         f.id === friendId
@@ -169,6 +193,7 @@ export default function ChatsView() {
       ));
     } catch (err) {
       console.error("Erro ao enviar mensagem:", err);
+      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
     }
   };
 
@@ -393,6 +418,26 @@ export default function ChatsView() {
                 </div>
               </div>
 
+              {/* Banner de Bloqueio se não for amigo confirmado */}
+              {selectedFriend.is_friend === false && (
+                <div style={{
+                  padding: "0.85rem 1.25rem",
+                  background: "rgba(239, 68, 68, 0.12)",
+                  borderBottom: "1px solid rgba(239, 68, 68, 0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  color: "#fca5a5",
+                  fontSize: "0.85rem"
+                }}>
+                  <span style={{ fontSize: "1.4rem" }}>🔒</span>
+                  <div>
+                    <strong style={{ color: "#ef4444", display: "block" }}>Amizade Não Confirmada</strong>
+                    <span>Você só pode enviar mensagens diretas para amigos conectados no Keeplay. Envie ou aguarde o pedido de amizade ser aceito na aba Comunidade.</span>
+                  </div>
+                </div>
+              )}
+
               {/* Feed de Mensagens */}
               <div className="chat-messages-stream" aria-live="polite">
                 {loadingMessages && messages.length === 0 ? (
@@ -428,28 +473,46 @@ export default function ChatsView() {
               </div>
 
               {/* Reações Rápidas */}
-              <div className="chat-quick-reactions-bar">
-                <span className="quick-reactions-label">Reações rápidas:</span>
-                <div className="quick-reactions-buttons">
-                  {QUICK_REACTIONS.map((r, i) => (
-                    <button key={`reaction-${i}`} type="button" className="quick-reaction-btn" title="Reação Rápida" onClick={() => sendMessage(null, r)}>
-                      {r}
-                    </button>
-                  ))}
+              {selectedFriend.is_friend !== false && (
+                <div className="chat-quick-reactions-bar">
+                  <span className="quick-reactions-label">Reações rápidas:</span>
+                  <div className="quick-reactions-buttons">
+                    {QUICK_REACTIONS.map((r, i) => (
+                      <button key={`reaction-${i}`} type="button" className="quick-reaction-btn" title="Reação Rápida" onClick={() => sendMessage(null, r)}>
+                        {r}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Formulário de Input */}
               <form className="chat-input-form" onSubmit={sendMessage} autoComplete="off">
                 <div className="chat-input-wrapper">
-                  <input type="text" className="chat-text-input" placeholder="Escreva uma mensagem..."
-                    value={inputMsg} onChange={e => setInputMsg(e.target.value)} required />
-                  <button type="submit" className="btn-send-message" title="Enviar mensagem" disabled={!inputMsg.trim()}>
+                  <input
+                    type="text"
+                    className="chat-text-input"
+                    placeholder={selectedFriend.is_friend === false ? "🔒 Aguardando confirmação de amizade..." : "Escreva uma mensagem..."}
+                    value={inputMsg}
+                    onChange={e => setInputMsg(e.target.value)}
+                    disabled={selectedFriend.is_friend === false}
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="btn-send-message"
+                    title="Enviar mensagem"
+                    disabled={selectedFriend.is_friend === false || !inputMsg.trim()}
+                  >
                     <span>Enviar</span>
                     <span className="send-icon">➤</span>
                   </button>
                 </div>
-                <small className="chat-form-tip">Pressione Enter para enviar. Troca de mensagens restrita a amigos conectados.</small>
+                <small className="chat-form-tip">
+                  {selectedFriend.is_friend === false
+                    ? "A troca de mensagens está bloqueada até que a solicitação de amizade seja aceita."
+                    : "Pressione Enter para enviar. Troca de mensagens restrita a amigos conectados."}
+                </small>
               </form>
 
             </div>

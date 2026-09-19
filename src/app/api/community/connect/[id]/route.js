@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import pool from "@/lib/db";
@@ -29,6 +29,25 @@ export async function PUT(req, { params }) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erro ao responder solicitacao:", error);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req, { params }) {
+  try {
+    const user = await getUserFromToken();
+    if (!user) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+
+    const { id } = await params;
+
+    await pool.query(
+      "DELETE FROM user_connections WHERE id = ? AND (requester_id = ? OR addressee_id = ?)",
+      [id, user.id, user.id]
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Erro ao cancelar/remover conexao:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }

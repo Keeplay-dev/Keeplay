@@ -20,32 +20,36 @@ export async function POST(req) {
 
     const body = await req.json();
     const addressee_id = body.addressee_id;
-    const auto_accept = Boolean(body.auto_accept);
 
     if (!addressee_id) return NextResponse.json({ error: "ID necessario" }, { status: 400 });
-
-    const targetStatus = auto_accept ? "accepted" : "pending";
+    if (addressee_id === user.id) return NextResponse.json({ error: "Nao e possivel conectar consigo mesmo" }, { status: 400 });
 
     // Verifica se já existe conexão em qualquer direção
     const [existing] = await pool.query(
-      "SELECT id, status FROM user_connections WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)",
+      "SELECT id, status, requester_id, addressee_id FROM user_connections WHERE (requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?)",
       [user.id, addressee_id, addressee_id, user.id]
     );
 
     if (existing.length > 0) {
-      if (auto_accept && existing[0].status !== "accepted") {
-        await pool.query("UPDATE user_connections SET status = 'accepted' WHERE id = ?", [existing[0].id]);
+      const conn = existing[0];
+      if (conn.status === "rejected") {
+        // Permite reenviar solicitação se foi rejeitada anteriormente
+        await pool.query(
+          "UPDATE user_connections SET status = 'pending', requester_id = ?, addressee_id = ?, updated_at = NOW() WHERE id = ?",
+          [user.id, addressee_id, conn.id]
+        );
+        return NextResponse.json({ success: true, connection_id: conn.id, status: "pending" });
       }
-      return NextResponse.json({ success: true, connection_id: existing[0].id, status: auto_accept ? "accepted" : existing[0].status });
+      return NextResponse.json({ success: true, connection_id: conn.id, status: conn.status });
     }
 
     const id = uuidv4();
     await pool.query(
-      "INSERT INTO user_connections (id, requester_id, addressee_id, status) VALUES (?, ?, ?, ?)",
-      [id, user.id, addressee_id, targetStatus]
+      "INSERT INTO user_connections (id, requester_id, addressee_id, status) VALUES (?, ?, ?, 'pending')",
+      [id, user.id, addressee_id]
     );
 
-    return NextResponse.json({ success: true, connection_id: id, status: targetStatus });
+    return NextResponse.json({ success: true, connection_id: id, status: "pending" });
   } catch (error) {
     console.error("Erro ao enviar solicitacao:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });

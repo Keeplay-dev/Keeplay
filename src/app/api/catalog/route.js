@@ -242,10 +242,25 @@ export async function POST(req) {
 
     try {
       await pool.query(
-        `INSERT INTO activity_feed (id, user_id, activity_type, item_title, item_category, item_rating, created_at) VALUES (?, ?, 'registrou', ?, ?, ?, NOW())`,
-        [uuidv4(), user.id, title, category, rating || null]
+        `INSERT INTO activity_feed 
+          (id, user_id, activity_type, media_item_id, title, media_title, cover_image, rating, comment, is_spoiler, metadata, created_at)
+         VALUES (?, ?, 'item', ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          uuidv4(),
+          user.id,
+          id,
+          `registrou uma nova obra`,
+          title,
+          cover_image || null,
+          rating || null,
+          comment || null,
+          is_spoiler ? 1 : 0,
+          JSON.stringify({ category })
+        ]
       );
-    } catch (e) {}
+    } catch (e) {
+      console.error("Erro ao registrar no activity_feed:", e);
+    }
 
     // Gamification: update missions progress & evaluate achievements
     let newlyUnlocked = [];
