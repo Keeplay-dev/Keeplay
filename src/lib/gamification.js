@@ -76,15 +76,15 @@ export async function ensureAllAchievementsInDB(pool) {
   }
 }
 
-// Atualiza o progresso das missões mensais do usuário com base no seu acervo real
+// Atualiza o progresso das missões quinzenais do usuário com base no seu acervo real
 export async function calculateMissionsProgress(userId, pool) {
-  const now = new Date();
-  const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const { getCurrentPeriod } = await import("./missionAi.js");
+  const periodInfo = getCurrentPeriod();
 
-  // 1. Obter missões ativas deste mês
+  // 1. Obter missões ativas desta quinzena
   const [missions] = await pool.query(
-    "SELECT * FROM monthly_missions WHERE month_year = ?",
-    [currentMonthYear]
+    "SELECT * FROM monthly_missions WHERE month_year = ? ORDER BY id ASC",
+    [periodInfo.periodKey]
   );
 
   if (missions.length === 0) return [];
@@ -94,6 +94,11 @@ export async function calculateMissionsProgress(userId, pool) {
     "SELECT id, category, status, rating, comment, created_at FROM media_items WHERE user_id = ?",
     [userId]
   );
+
+  const quinzenaItems = items.filter(i => {
+    const itemDate = new Date(i.created_at);
+    return itemDate >= periodInfo.startDate && itemDate <= periodInfo.endDate;
+  });
 
   // 3. Obter progresso existente do usuário
   const [existingProgress] = await pool.query(
@@ -112,26 +117,36 @@ export async function calculateMissionsProgress(userId, pool) {
     const prev = progressMap[m.id] || { current_count: 0, is_completed: 0, is_claimed: 0 };
     let currentCount = 0;
 
-    const desc = (m.description || '').toLowerCase();
-    const title = (m.title || '').toLowerCase();
+    const reqType = m.requirement_type || 'category_count';
+    const minRating = Number(m.min_rating) || 4.0;
+    const minChars = Number(m.min_chars) || 50;
 
-    if (m.category === 'filme') {
-      currentCount = items.filter(i => i.category === 'filme').length;
-    } else if (m.category === 'serie') {
-      currentCount = items.filter(i => i.category === 'serie').length;
-    } else if (m.category === 'livro') {
-      currentCount = items.filter(i => i.category === 'livro').length;
-    } else if (m.category === 'jogo') {
-      if (desc.includes('4 ou 5') || desc.includes('estrelas') || title.includes('determinado')) {
-        currentCount = items.filter(i => i.category === 'jogo' && Number(i.rating) >= 4).length;
-      } else {
-        currentCount = items.filter(i => i.category === 'jogo').length;
-      }
-    } else if (desc.includes('resenha') || desc.includes('50 caracteres') || title.includes('detalhista')) {
-      currentCount = items.filter(i => i.comment && i.comment.trim().length >= 50).length;
-    } else {
-      // Missão de obras gerais (ex: Explorador)
+    if (reqType === 'total_items') {
       currentCount = items.length;
+    } else if (reqType === 'high_rating') {
+      const candidates = quinzenaItems.length > 0 ? quinzenaItems : items;
+      currentCount = candidates.filter(i => 
+        (!m.category || i.category === m.category) && Number(i.rating) >= minRating
+      ).length;
+    } else if (reqType === 'in_depth_review') {
+      const candidates = quinzenaItems.length > 0 ? quinzenaItems : items;
+      currentCount = candidates.filter(i => 
+        (!m.category || i.category === m.category) && i.comment && i.comment.trim().length >= minChars
+      ).length;
+    } else if (reqType === 'completed_status') {
+      const candidates = quinzenaItems.length > 0 ? quinzenaItems : items;
+      currentCount = candidates.filter(i => 
+        (!m.category || i.category === m.category) && 
+        ['zerado', 'platinado', 'lido', 'finalizada'].includes(i.status)
+      ).length;
+    } else {
+      // category_count padrão
+      const candidates = quinzenaItems.length > 0 ? quinzenaItems : items;
+      if (m.category) {
+        currentCount = candidates.filter(i => i.category === m.category).length;
+      } else {
+        currentCount = candidates.length;
+      }
     }
 
     const isCompleted = currentCount >= m.target_count ? 1 : 0;

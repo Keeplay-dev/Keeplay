@@ -55,3 +55,30 @@ export async function POST(req) {
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }
+
+export async function DELETE(req) {
+  try {
+    const user = await getUserFromToken();
+    if (!user) return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+
+    const body = await req.json().catch(() => ({}));
+    const targetUserId = body.target_user_id || body.user_id || body.addressee_id;
+    const connectionId = body.connection_id;
+
+    if (!targetUserId && !connectionId) {
+      return NextResponse.json({ error: "ID do usuário ou conexão é obrigatório." }, { status: 400 });
+    }
+
+    const [result] = await pool.query(
+      `DELETE FROM user_connections 
+       WHERE (id = ? AND (requester_id = ? OR addressee_id = ?))
+          OR ((requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?))`,
+      [connectionId || "", user.id, user.id, user.id, targetUserId || "", targetUserId || "", user.id]
+    );
+
+    return NextResponse.json({ success: true, affectedRows: result.affectedRows });
+  } catch (error) {
+    console.error("Erro ao remover amizade:", error);
+    return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+  }
+}

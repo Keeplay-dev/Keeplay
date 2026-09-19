@@ -88,7 +88,7 @@ export async function GET(req) {
 
     // 2. Amigos confirmados
     const [friends] = await pool.query(`
-      SELECT u.id, u.name, u.username, u.avatar_url, u.equipped_title, u.total_xp
+      SELECT c.id as connection_id, u.id, u.name, u.username, u.avatar_url, u.equipped_title, u.total_xp
       FROM user_connections c
       JOIN users u ON u.id = CASE WHEN c.requester_id = ? THEN c.addressee_id ELSE c.requester_id END
       WHERE (c.requester_id = ? OR c.addressee_id = ?) AND c.status = 'accepted'

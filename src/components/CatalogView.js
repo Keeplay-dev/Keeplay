@@ -102,6 +102,8 @@ export default function CatalogView() {
   const [saving, setSaving] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [xpToast, setXpToast] = useState(null);
+  const [missionsMeta, setMissionsMeta] = useState(null);
+  const [editingList, setEditingList] = useState(null);
 
   const searchTimeout = useRef(null);
 
@@ -125,7 +127,16 @@ export default function CatalogView() {
       ]);
 
       if (profileRes.ok) setProfile((await profileRes.json()).profile);
-      if (missionsRes.ok) setMissions((await missionsRes.json()).missions || []);
+      if (missionsRes.ok) {
+        const mData = await missionsRes.json();
+        setMissions(mData.missions || []);
+        if (mData.periodInfo) {
+          setMissionsMeta({
+            periodInfo: mData.periodInfo,
+            theme: mData.theme
+          });
+        }
+      }
       if (catalogRes.ok) setItems((await catalogRes.json()).items || []);
       if (listsRes.ok) setLists((await listsRes.json()).lists || []);
     } catch (err) {
@@ -134,6 +145,24 @@ export default function CatalogView() {
       setLoading(false);
     }
   }, [categoryFilter, statusFilter, searchQuery]);
+
+  const handleDeleteList = async (list) => {
+    if (!confirm(`Tem certeza que deseja excluir a lista "${list.title}"?`)) return;
+    try {
+      const res = await fetch(`/api/lists/${list.id}`, { method: "DELETE" });
+      if (res.ok) {
+        setLists(prev => prev.filter(l => l.id !== list.id));
+        setXpToast("✓ Lista excluída com sucesso.");
+        setTimeout(() => setXpToast(null), 3000);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Não foi possível excluir a lista.");
+      }
+    } catch (e) {
+      console.error("Erro ao excluir lista:", e);
+      alert("Erro de conexão ao excluir lista.");
+    }
+  };
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -514,7 +543,7 @@ export default function CatalogView() {
             <span>📑</span> Minhas Listas <span className="badge-pill">{lists.length}</span>
           </button>
           <button type="button" className={`sub-nav-tab ${activeSubTab === "missions" ? "active" : ""}`} onClick={() => setActiveSubTab("missions")}>
-            <span>🎯</span> Missões Mensais <span className="badge-pill pulse-badge">{missions.length || 0} Ativas</span>
+            <span>🎯</span> Missões Quinzenais <span className="badge-pill pulse-badge">{missions.length || 0} Ativas</span>
           </button>
         </div>
       </div>
@@ -681,7 +710,15 @@ export default function CatalogView() {
               <h3>Listas Temáticas Personalizadas</h3>
               <p className="desc-muted" style={{ margin: 0 }}>Crie coleções de obras</p>
             </div>
-            <button className="btn-create" onClick={() => setShowListModal(true)}><span>+</span> Nova Lista</button>
+            <button
+              className="btn-create"
+              onClick={() => {
+                setEditingList(null);
+                setShowListModal(true);
+              }}
+            >
+              <span>+</span> Nova Lista
+            </button>
           </div>
 
           <div className="custom-lists-grid">
@@ -694,8 +731,43 @@ export default function CatalogView() {
                   </span>
                 </div>
                 <p className="custom-list-desc">{list.description || "Sem descrição"}</p>
-                <div className="custom-list-footer">
-                  <span>{list.item_count || 0} itens</span>
+                <div
+                  className="custom-list-footer"
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginTop: "0.75rem",
+                    paddingTop: "0.5rem",
+                    borderTop: "1px solid var(--border-subtle)",
+                  }}
+                >
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                    {list.item_count || 0} {list.item_count === 1 ? "obra" : "obras"}
+                  </span>
+                  <div style={{ display: "flex", gap: "0.4rem" }}>
+                    <button
+                      type="button"
+                      className="btn-item-edit"
+                      style={{ padding: "0.3rem 0.65rem", fontSize: "0.75rem" }}
+                      onClick={() => {
+                        setEditingList(list);
+                        setShowListModal(true);
+                      }}
+                      title="Editar lista"
+                    >
+                      ✏️ Editar
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-item-delete"
+                      style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
+                      onClick={() => handleDeleteList(list)}
+                      title="Excluir lista"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               </div>
             )) : (
@@ -710,17 +782,37 @@ export default function CatalogView() {
       {/* MISSÕES */}
       {activeSubTab === "missions" && (
         <div id="catalogMissionsSection">
-          <div className="missions-banner">
-            <div className="missions-banner-info">
-              <div className="missions-tag">🔥 Gamificação Sazonal</div>
-              <h3>Missões Temporárias de {new Date().toLocaleString("pt-BR", { month: "long" })}</h3>
-              <p>Complete as metas antes do encerramento do mês para ganhar bônus de XP!</p>
+          <div className="missions-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1.25rem" }}>
+            <div className="missions-banner-info" style={{ flex: 1, minWidth: "260px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.35rem" }}>
+                <span className="missions-tag" style={{ background: "linear-gradient(90deg, #6366f1, #ec4899)", color: "#fff" }}>
+                  🤖 Curadoria por IA
+                </span>
+                {missionsMeta?.theme && (
+                  <span className="equipped-title-badge" style={{ fontSize: "0.72rem", padding: "0.2rem 0.6rem", background: "rgba(255,255,255,0.08)", border: "1px solid var(--border-subtle)" }}>
+                    ✨ Tema: {missionsMeta.theme}
+                  </span>
+                )}
+              </div>
+              <h3 style={{ margin: "0.25rem 0", fontSize: "1.25rem" }}>
+                {missionsMeta?.periodInfo?.periodLabel || `Missões Quinzenais de ${new Date().toLocaleString("pt-BR", { month: "long" })}`}
+              </h3>
+              <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.85rem" }}>
+                Desafios culturais selecionados pela IA renovados automaticamente a cada quinzena. Conclua as metas antes do prazo expirar para resgatar XP!
+              </p>
             </div>
-            <div className="missions-timer-box">
-              <span className="timer-icon">⏳</span>
-              <div>
-                <div class="timer-val">{new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()} dias</div>
-                <div className="timer-lbl">restantes no ciclo</div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+              <div className="missions-timer-box">
+                <span className="timer-icon">⏳</span>
+                <div>
+                  <div className="timer-val">
+                    {missionsMeta?.periodInfo?.remainingDays != null
+                      ? `${missionsMeta.periodInfo.remainingDays} dias`
+                      : `${new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()} dias`}
+                  </div>
+                  <div className="timer-lbl">nesta quinzena</div>
+                </div>
               </div>
             </div>
           </div>
@@ -744,7 +836,14 @@ export default function CatalogView() {
                       <div className="mission-header">
                         <div className="mission-icon">{m.icon || "🎯"}</div>
                         <div className="mission-info">
-                          <h4>{m.title}</h4>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.2rem" }}>
+                            <h4 style={{ margin: 0 }}>{m.title}</h4>
+                            {m.ai_generated && (
+                              <span style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "4px", background: "rgba(99, 102, 241, 0.2)", color: "#a5b4fc", border: "1px solid rgba(99, 102, 241, 0.3)" }}>
+                                🤖 IA
+                              </span>
+                            )}
+                          </div>
                           <p>{m.description}</p>
                         </div>
                       </div>
@@ -798,11 +897,18 @@ export default function CatalogView() {
 
       {showListModal && mounted && createPortal(
         <CustomListModal
+          listToEdit={editingList}
           catalogItems={items}
-          onClose={() => setShowListModal(false)}
-          onSave={(newList) => {
-            setLists([newList, ...lists]);
+          onClose={() => {
             setShowListModal(false);
+            setEditingList(null);
+          }}
+          onSave={(savedList) => {
+            fetchData();
+            setShowListModal(false);
+            setEditingList(null);
+            setXpToast(editingList ? "✓ Lista atualizada com sucesso!" : "✓ Lista criada com sucesso!");
+            setTimeout(() => setXpToast(null), 3000);
           }}
         />,
         document.body

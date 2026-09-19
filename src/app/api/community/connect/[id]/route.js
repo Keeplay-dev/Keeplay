@@ -40,12 +40,14 @@ export async function DELETE(req, { params }) {
 
     const { id } = await params;
 
-    await pool.query(
-      "DELETE FROM user_connections WHERE id = ? AND (requester_id = ? OR addressee_id = ?)",
-      [id, user.id, user.id]
+    const [result] = await pool.query(
+      `DELETE FROM user_connections 
+       WHERE (id = ? AND (requester_id = ? OR addressee_id = ?))
+          OR ((requester_id = ? AND addressee_id = ?) OR (requester_id = ? AND addressee_id = ?))`,
+      [id, user.id, user.id, user.id, id, id, user.id]
     );
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, affectedRows: result.affectedRows });
   } catch (error) {
     console.error("Erro ao cancelar/remover conexao:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });

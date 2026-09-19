@@ -116,6 +116,74 @@ export default function CommunityView() {
     }
   };
 
+  // Desfazer Amizade
+  const handleUnfriend = async (targetUser) => {
+    if (!targetUser || !targetUser.id) return;
+    const name = targetUser.name || `@${targetUser.username}` || "este usuário";
+    if (!confirm(`Deseja realmente desfazer a amizade com ${name}?`)) return;
+
+    try {
+      const idToPass = targetUser.connection_id || targetUser.id;
+      const res = await fetch(`/api/community/connect/${idToPass}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setFriends(prev => prev.filter(f => f.id !== targetUser.id));
+        setUsers(prev => prev.map(u => {
+          if (u.id === targetUser.id) {
+            return {
+              ...u,
+              is_friend: 0,
+              connection_status: null,
+              connection_id: null,
+              request_sent_by_me: 0,
+              request_received_by_me: 0,
+            };
+          }
+          return u;
+        }));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "Não foi possível desfazer a amizade.");
+      }
+    } catch (err) {
+      console.error("Erro ao desfazer amizade:", err);
+      alert("Erro de conexão ao desfazer amizade.");
+    }
+  };
+
+  // Cancelar Solicitação Enviada
+  const handleCancelRequest = async (targetUser) => {
+    if (!targetUser || !targetUser.id) return;
+    try {
+      const idToPass = targetUser.connection_id || targetUser.id;
+      const res = await fetch(`/api/community/connect/${idToPass}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setSentRequests(prev => prev.filter(id => id !== targetUser.id));
+        setUsers(prev => prev.map(u => {
+          if (u.id === targetUser.id) {
+            return {
+              ...u,
+              connection_status: null,
+              connection_id: null,
+              request_sent_by_me: 0,
+            };
+          }
+          return u;
+        }));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "Não foi possível cancelar a solicitação.");
+      }
+    } catch (err) {
+      console.error("Erro ao cancelar solicitação:", err);
+    }
+  };
+
   // Abrir Chat Diretamente com o Membro (sem auto_accept indevido)
   const handleOpenChat = (targetUser) => {
     if (!targetUser || !targetUser.id) return;
@@ -329,13 +397,43 @@ export default function CommunityView() {
                     <div className="user-card-actions" style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                       <div style={{ flex: 1, minWidth: "120px" }}>
                         {isFriend ? (
-                          <button className="btn-friend is-friend" disabled style={{ width: "100%", background: "rgba(16, 185, 129, 0.2)", color: "#34d399", border: "1px solid rgba(16, 185, 129, 0.4)" }}>✓ Amigos</button>
+                          <button
+                            type="button"
+                            className="btn-friend is-friend"
+                            onClick={() => handleUnfriend(u)}
+                            title="Clique para desfazer amizade"
+                            style={{ width: "100%", cursor: "pointer" }}
+                          >
+                            ✓ Amigos
+                          </button>
                         ) : isPending ? (
-                          <button className="btn-friend is-pending" disabled style={{ width: "100%", background: "rgba(234, 179, 8, 0.15)", color: "#facc15", border: "1px solid rgba(234, 179, 8, 0.3)" }}>⏳ Solicitação enviada</button>
+                          <button
+                            type="button"
+                            className="btn-friend is-pending"
+                            onClick={() => handleCancelRequest(u)}
+                            title="Clique para cancelar solicitação enviada"
+                            style={{ width: "100%", cursor: "pointer" }}
+                          >
+                            ⏳ Enviada
+                          </button>
                         ) : hasIncomingRequest ? (
-                          <button className="btn-friend" onClick={() => setActiveSubTab("requests")} style={{ width: "100%", background: "rgba(99, 102, 241, 0.25)", color: "#a5b4fc", border: "1px solid #6366f1" }}>📬 Responder Pedido</button>
+                          <button
+                            type="button"
+                            className="btn-friend"
+                            onClick={() => setActiveSubTab("requests")}
+                            style={{ width: "100%", background: "rgba(99, 102, 241, 0.25)", color: "#a5b4fc", border: "1px solid #6366f1", cursor: "pointer" }}
+                          >
+                            📬 Responder Pedido
+                          </button>
                         ) : (
-                          <button className="btn-friend not-friend" onClick={() => handleSendRequest(u.id)} style={{ width: "100%" }}>+ Conectar</button>
+                          <button
+                            type="button"
+                            className="btn-friend not-friend"
+                            onClick={() => handleSendRequest(u.id)}
+                            style={{ width: "100%", cursor: "pointer" }}
+                          >
+                            + Conectar
+                          </button>
                         )}
                       </div>
                       <button
@@ -461,6 +559,24 @@ export default function CommunityView() {
                           onClick={() => setSelectedCatalogUserId(f.id)}
                         >
                           📚 Catálogo
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-unfriend-action"
+                          title="Desfazer Amizade"
+                          style={{
+                            padding: "0.3rem 0.6rem",
+                            fontSize: "0.75rem",
+                            background: "rgba(239, 68, 68, 0.12)",
+                            color: "#f87171",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            borderRadius: "var(--radius-sm, 6px)",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                          onClick={() => handleUnfriend(f)}
+                        >
+                          ✕ Desfazer
                         </button>
                       </div>
                     </div>

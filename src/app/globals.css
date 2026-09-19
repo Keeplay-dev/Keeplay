@@ -624,8 +624,12 @@ button {
   font-weight: 600;
 }
 
-.nav-profile-btn:hover {
+.nav-profile-btn:hover,
+.nav-profile-btn.active {
   border-color: var(--accent-primary);
+  background: rgba(99, 102, 241, 0.15);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
 }
 
 .nav-avatar-mini {

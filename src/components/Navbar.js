@@ -126,9 +126,6 @@ export default function Navbar() {
               </span>
             )}
           </Link>
-          <Link href="/dashboard/profile" className={`nav-view-btn ${pathname === "/dashboard/profile" ? "active" : ""}`}>
-            <span>👤</span> Meu Perfil
-          </Link>
         </nav>
 
         <div className="gamification-bar" title="Seu progresso atual no Keeplay">
@@ -161,7 +158,7 @@ export default function Navbar() {
             <span>📥 Dados</span>
           </button>
           
-          <Link href="/dashboard/profile" id="navProfileShortcut" className="nav-profile-btn" title="Ir para Meu Perfil">
+          <Link href="/dashboard/profile" id="navProfileShortcut" className={`nav-profile-btn ${pathname === "/dashboard/profile" ? "active" : ""}`} title="Ir para Meu Perfil">
             <div className="nav-avatar-mini" id="navAvatarMini" style={{ overflow: "hidden" }}>
               {profile?.avatar_url 
                 ? <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />

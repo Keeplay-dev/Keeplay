@@ -217,6 +217,29 @@ export default function ChatsView() {
     }
   };
 
+  // 6. Desfazer amizade com este usuário
+  const handleUnfriendChat = async (friend) => {
+    if (!friend || !friend.id) return;
+    if (!confirm(`Deseja realmente desfazer a amizade com ${friend.name}?`)) return;
+
+    try {
+      const res = await fetch(`/api/community/connect/${friend.id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setSelectedFriend(prev => prev ? { ...prev, is_friend: false } : null);
+        setFriends(prev => prev.map(f => f.id === friend.id ? { ...f, is_friend: false } : f));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || "Não foi possível desfazer a amizade.");
+      }
+    } catch (err) {
+      console.error("Erro ao desfazer amizade:", err);
+      alert("Erro de conexão ao desfazer amizade.");
+    }
+  };
+
   const filteredFriends = friends.filter(f =>
     !searchQuery || f.name?.toLowerCase().includes(searchQuery.toLowerCase()) || f.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -403,7 +426,7 @@ export default function ChatsView() {
                   </div>
                 </div>
 
-                <div className="active-chat-actions" style={{ display: "flex", gap: "0.5rem" }}>
+                <div className="active-chat-actions" style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                   <button
                     type="button"
                     className="btn-icon-text chat-btn-profile"
@@ -412,8 +435,23 @@ export default function ChatsView() {
                   >
                     <span>📚</span> <span className="hide-on-mobile">Ver Catálogo</span>
                   </button>
+                  {selectedFriend.is_friend !== false && (
+                    <button
+                      type="button"
+                      className="chat-btn-delete"
+                      title="Desfazer amizade com este usuário"
+                      style={{
+                        background: "rgba(239, 68, 68, 0.12)",
+                        borderColor: "rgba(239, 68, 68, 0.3)",
+                        color: "#fca5a5",
+                      }}
+                      onClick={() => handleUnfriendChat(selectedFriend)}
+                    >
+                      <span>✕</span> <span className="hide-on-mobile">Desfazer Amizade</span>
+                    </button>
+                  )}
                   <button type="button" className="chat-btn-delete" title="Excluir histórico" onClick={() => handleDeleteChat(selectedFriend)}>
-                    <span>🗑️</span> <span className="hide-on-mobile">Excluir</span>
+                    <span>🗑️</span> <span className="hide-on-mobile">Excluir Chat</span>
                   </button>
                 </div>
               </div>
