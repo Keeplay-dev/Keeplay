@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Keeplay - Diário Cultural, Gamificação & Comunidade</title>
+  <meta name="description" content="Acompanhe séries, filmes, livros e jogos com status específicos, diário de consumo, missões mensais, conquistas secretas, listas personalizadas, feed de amigos e retrospectiva Wrapped no Keeplay.">
+  <meta name="theme-color" content="#080a0f">
+
+  <!-- Ícone do Aplicativo (Favicon & Apple Touch) -->
+  <link rel="icon" type="image/jpeg" href="keeplay_icon.jpg">
+  <link rel="apple-touch-icon" href="keeplay_icon.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css?v=2.1">
+</head>
+<body>
+
+  <!-- Canvas para Chuva de Confetes Animada -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Orbs de Luz Animados no Fundo -->
+  <div class="ambient-background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ==========================================
+       Tela de Autenticação / Login & Cadastro
+       ========================================== -->
+  <main id="authSection" class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-brand" style="width: 68px; height: 68px; max-width: 68px; max-height: 68px; min-width: 68px; min-height: 68px; overflow: hidden; flex-shrink: 0;">
+        <img src="keeplay_icon.jpg" alt="Keeplay" class="auth-brand-img" width="68" height="68" style="width: 68px; height: 68px; max-width: 68px; max-height: 68px; min-width: 68px; min-height: 68px; object-fit: cover; border-radius: 18px; display: block;">
+      </div>
+      <h1>Keeplay</h1>
+      <p class="subtitle">Seu diário cultural, rede de amigos & gamificação de entretenimento</p>
+
+      <!-- Alternador de Abas: Entrar / Cadastrar -->
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab-btn active" id="tabAuthLogin">Entrar</button>
+        <button type="button" class="auth-tab-btn" id="tabAuthRegister">Cadastrar</button>
+      </div>
+
+      <div id="loginError" class="alert-error" role="alert">
+        Usuário ou senha incorretos.
+      </div>
+
+      <!-- Formulário de Login -->
+      <form id="loginForm" autocomplete="off">
+        <div class="form-group">
+          <label for="loginIdentifier" class="form-label">Usuário</label>
+          <input type="text" id="loginIdentifier" class="input-field" placeholder="Digite seu usuário..." required autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="loginPassword" class="form-label">Senha</label>
+          <input type="password" id="loginPassword" class="input-field" placeholder="Digite sua senha..." required>
+        </div>
+
+        <button type="submit" id="btnLogin" class="btn-primary">Entrar</button>
+      </form>
+
+      <!-- Formulário de Cadastro -->
+      <form id="registerForm" autocomplete="off" style="display: none;">
+        <div class="form-group">
+          <label for="regName" class="form-label">Nome Completo</label>
+          <input type="text" id="regName" class="input-field" placeholder="Ex: Lucas Silva" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regUsername" class="form-label">Nome de Usuário</label>
+          <input type="text" id="regUsername" class="input-field" placeholder="Ex: lucas_cult" required>
+          <small id="regUsernameFeedback" style="display: none; font-size: 0.75rem; margin-top: 0.25rem;"></small>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword" class="form-label">Senha</label>
+          <input type="password" id="regPassword" class="input-field" placeholder="Crie uma senha..." required>
+        </div>
+
+        <!-- Consentimento e Contrato LGPD -->
+        <div class="form-group terms-agreement-group">
+          <label class="terms-checkbox-label" for="regAcceptTerms">
+            <input type="checkbox" id="regAcceptTerms" required>
+            <span class="terms-label-text">
+              Li e concordo com os 
+              <button type="button" class="btn-terms-modal-trigger" id="btnOpenTermsModal">
+                Termos de Uso e Proteção de Dados (LGPD)
+              </button>
+            </span>
+          </label>
+          <div class="terms-pdf-actions" style="margin-top: 0.35rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="termos_lgpd.pdf" target="_blank" class="btn-terms-pdf-link" id="btnOpenLgpdPdf" title="Abrir documento oficial em PDF">
+              📄 Abrir Termos & LGPD (PDF)
+            </a>
+          </div>
+          <div class="terms-badge-hint">
+            <span>🛡️</span> Seus dados protegidos conforme a Lei Geral de Proteção de Dados (LGPD).
+          </div>
+        </div>
+
+        <button type="submit" id="btnRegister" class="btn-primary">Cadastrar e Entrar</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- ==========================================
+       Aplicação Principal / Dashboard
+       ========================================== -->
+  <div id="appSection" class="app-container">
+    
+    <!-- Topbar & Gamificação -->
+    <header class="navbar">
+      <div class="navbar-content">
+        <div class="brand-wrapper" id="brandHomeBtn">
+          <div class="brand-icon" style="width: 38px; height: 38px; max-width: 38px; max-height: 38px; min-width: 38px; min-height: 38px; overflow: hidden; flex-shrink: 0;">
+            <img src="keeplay_icon.jpg" alt="Keeplay" class="brand-icon-img" width="38" height="38" style="width: 38px; height: 38px; max-width: 38px; max-height: 38px; min-width: 38px; min-height: 38px; object-fit: cover; border-radius: 10px; display: block;">
+          </div>
+          <span class="brand-title">Keeplay</span>
+        </div>
+
+        <!-- Seletor de Abas Principais: Catálogo | Comunidade | Chats | Perfil -->
+        <nav class="nav-views-switcher" aria-label="Navegação Principal">
+          <button type="button" class="nav-view-btn active" id="btnViewCatalog">
+            <span>📚</span> Catálogo
+          </button>
+          <button type="button" class="nav-view-btn" id="btnViewCommunity">
+            <span>👥</span> Comunidade
+          </button>
+          <button type="button" class="nav-view-btn" id="btnViewChats">
+            <span>💬</span> Chats <span class="badge-pill" id="unreadChatsBadge" style="display: none; background: var(--accent-secondary); color: #fff; padding: 0.1rem 0.45rem; font-size: 0.72rem; margin-left: 0.25rem;">0</span>
+          </button>
+          <button type="button" class="nav-view-btn" id="btnViewProfile">
+            <span>👤</span> Meu Perfil
+          </button>
+        </nav>
+
+        <!-- Barra de Progresso de XP & Nível -->
+        <div class="gamification-bar" title="Seu progresso atual no Keeplay">
+          <div class="level-badge" id="userLevelBadge">
+            <span>⭐</span> <span id="levelNumber">Nível 1</span>
+          </div>
+
+          <div class="xp-progress-wrapper">
+            <div class="xp-text-info">
+              <span id="xpCurrentText">0 XP</span>
+              <span id="xpNextText">/ 150 XP</span>
+            </div>
+            <div class="xp-progress-track">
+              <div class="xp-progress-fill" id="xpProgressBar" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ações do Cabeçalho -->
+        <div class="nav-actions">
+          <!-- Retrospectiva Wrapped -->
+          <button id="btnOpenWrapped" class="btn-icon-text btn-wrapped-pulse" title="Ver sua Retrospectiva Cultural Interativa">
+            <span>✨ Wrapped</span>
+          </button>
+
+          <!-- Conquistas -->
+          <button id="btnOpenAchievements" class="btn-icon-text" title="Ver medalhas e conquistas secretas">
+            <span>🏆 Conquistas</span>
+            <span class="badge-count" id="unlockedBadgesCount">0/31</span>
+          </button>
+
+          <!-- Importação e Exportação de Dados -->
+          <button id="btnOpenCsvModal" class="btn-icon-text" title="Importar/Exportar dados em CSV ou JSON">
+            <span>📥 Dados</span>
+          </button>
+          
+          <!-- Atalho para Perfil -->
+          <button id="navProfileShortcut" class="nav-profile-btn" title="Ir para Meu Perfil">
+            <div class="nav-avatar-mini" id="navAvatarMini">👤</div>
+            <span id="navUsernameText">Perfil</span>
+          </button>
+
+          <button id="btnLogout" class="btn-logout" title="Sair da sua conta">
+            <span>🚪</span> Sair
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+      
+      <!-- ==========================================
+           VISÃO 1: Catálogo Pessoal de Mídias
+           ========================================== -->
+      <div id="catalogView">
+        
+        <!-- Hero / Resumo & Título Equipado -->
+        <section class="dashboard-hero">
+          <div class="hero-profile-summary">
+            <div class="hero-avatar-wrapper">
+              <div class="hero-avatar-img" id="heroAvatarImg">R</div>
+            </div>
+            <div class="hero-welcome">
+              <h2>Olá, <span id="profileDisplayName">Rafael</span>! 👋</h2>
+              <div class="hero-title-badge-wrap">
+                <span class="equipped-title-badge" id="heroEquippedTitle">👑 Iniciante Curioso</span>
+                <span class="hero-level-desc" id="levelTitleDesc">Nível 1 • Registre para subir de patente</span>
+              </div>
+              <p class="hero-bio" id="heroBioText">Entusiasta de séries, ficção científica, livros envolventes e games épicos.</p>
+            </div>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-pill">
+              <div class="stat-value" id="statTotalItems">0</div>
+              <div class="stat-label">Registros</div>
+            </div>
+            <div class="stat-pill">
+              <div class="stat-value" id="statAverageRating">0.0</div>
+              <div class="stat-label">Média ⭐</div>
+            </div>
+            <div class="stat-pill">
+              <div class="stat-value" id="statHoursSpent">0h</div>
+              <div class="stat-label">Tempo Dedicado</div>
+            </div>
+            <div class="stat-pill">
+              <div class="stat-value" id="statTotalXp">0</div>
+              <div class="stat-label">XP Total</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sub-navegação do Catálogo: Acervo | Listas Personalizadas | Missões Mensais -->
+        <div class="sub-nav-bar">
+          <div class="sub-nav-tabs">
+            <button type="button" class="sub-nav-tab active" id="subTabCatalog">
+              <span>📚</span> Meu Acervo
+            </button>
+            <button type="button" class="sub-nav-tab" id="subTabLists">
+              <span>📑</span> Minhas Listas <span class="badge-pill" id="userListsCount">0</span>
+            </button>
+            <button type="button" class="sub-nav-tab" id="subTabMissions">
+              <span>🎯</span> Missões Mensais <span class="badge-pill pulse-badge" id="activeMissionsBadge">Ativas</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 1A: MEU ACERVO (Cards de Mídia) -->
+        <div id="catalogAcervoSection">
+          <!-- Barra de Ferramentas (Filtros por Categoria, Status, Pesquisa e Ação) -->
+          <section class="controls-bar">
+            <div class="category-tabs" role="tablist">
+              <button class="tab-btn active" data-category="todos" role="tab">✨ Todos</button>
+              <button class="tab-btn" data-category="filme" role="tab">🎬 Filmes</button>
+              <button class="tab-btn" data-category="serie" role="tab">🍿 Séries</button>
+              <button class="tab-btn" data-category="livro" role="tab">📚 Livros</button>
+              <button class="tab-btn" data-category="jogo" role="tab">🎮 Jogos</button>
+            </div>
+
+            <!-- Filtro de Status Específico -->
+            <div class="status-filter-wrapper">
+              <label for="statusFilterSelect" class="sr-only">Filtrar por Status</label>
+              <select id="statusFilterSelect" class="select-filter">
+                <option value="todos">⚡ Todos os Status</option>
+                <option value="platinado">🏆 Platinados (Jogos)</option>
+                <option value="zerado">✅ Zerados (Jogos)</option>
+                <option value="jogando">🕹️ Jogando</option>
+                <option value="assistindo">🍿 Assistindo (Séries)</option>
+                <option value="finalizada">🎬 Finalizadas</option>
+                <option value="lendo">📖 Lendo (Livros)</option>
+                <option value="lido">📚 Concluídos</option>
+                <option value="quero_assistir">⏳ Quero Consumir / Backlog</option>
+                <option value="dropado">💤 Abandonados / Dropados</option>
+              </select>
+            </div>
+
+            <div class="search-and-action">
+              <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Buscar por título, resenha, provedor...">
+              </div>
+
+              <button id="btnOpenModal" class="btn-create">
+                <span>+</span> Novo Registro
+              </button>
+            </div>
+          </section>
+
+          <!-- Grid de Mídias Cadastradas -->
+          <section id="mediaGrid" class="media-grid" aria-live="polite">
+            <!-- Itens inseridos dinamicamente pelo JavaScript -->
+          </section>
+        </div>
+
+        <!-- SEÇÃO 1B: MINHAS LISTAS PERSONALIZADAS -->
+        <div id="catalogListsSection" style="display: none;">
+          <div class="lists-header-row">
+            <div>
+              <h3>Listas Temáticas Personalizadas</h3>
+              <p class="desc-muted">Crie seleções especiais públicas ou privadas e compartilhe com a comunidade.</p>
+            </div>
+            <button type="button" id="btnOpenCreateListModal" class="btn-create">
+              <span>+</span> Nova Lista
+            </button>
+          </div>
+
+          <div id="customListsGrid" class="custom-lists-grid">
+            <!-- Cards de listas preenchidos dinamicamente -->
+          </div>
+        </div>
+
+        <!-- SEÇÃO 1C: MISSÕES TEMPORÁRIAS MENSAIS -->
+        <div id="catalogMissionsSection" style="display: none;">
+          <div class="missions-banner">
+            <div class="missions-banner-info">
+              <div class="missions-tag">🔥 Gamificação Sazonal</div>
+              <h3 id="missionsMonthTitle">Missões Temporárias de Setembro</h3>
+              <p>Complete as metas antes do encerramento do mês para ganhar bônus de XP maciço e medalhas de honra!</p>
+            </div>
+            <div class="missions-timer-box">
+              <span class="timer-icon">⏳</span>
+              <div>
+                <div class="timer-val" id="missionsDaysRemaining">15 dias</div>
+                <div class="timer-lbl">restantes no ciclo</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="monthlyMissionsGrid" class="missions-grid">
+            <!-- Cards de missões renderizados dinamicamente -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==========================================
+           VISÃO 2: Comunidade (Buscar Perfis & Feed)
+           ========================================== -->
+      <section id="communityView" class="community-section">
+        
+        <!-- Sub-navegação da Comunidade -->
+        <div class="sub-nav-bar" style="margin-bottom: 1.5rem;">
+          <div class="sub-nav-tabs">
+            <button type="button" class="sub-nav-tab active" id="subTabCommunityMembers">
+              <span>👥</span> Membros & Afinidade Cultural
+            </button>
+            <button type="button" class="sub-nav-tab" id="subTabCommunityRequests">
+              <span>📬</span> Solicitações <span class="badge-pill pulse-badge" id="pendingRequestsCountBadge" style="display: none;">0</span>
+            </button>
+            <button type="button" class="sub-nav-tab" id="subTabCommunityFeed">
+              <span>⚡</span> Feed de Atividades dos Amigos
+            </button>
+            <button type="button" class="sub-nav-tab" id="subTabCommunityBlocked">
+              <span>🚫</span> Bloqueados <span class="badge-pill" id="blockedUsersCountBadge" style="display: none;">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 2A: MEMBROS & AFINIDADE CULTURAL -->
+        <div id="communityMembersSection">
+          <div class="community-header">
+            <div class="community-header-title-row">
+              <h2>Comunidade Cultural & Afinidade 👥</h2>
+              <span class="badge-pill" id="friendsCounterBadge" style="background: rgba(99, 102, 241, 0.2); color: #a5b4fc; font-size: 0.8rem; padding: 0.25rem 0.75rem;">0 amigos conectados</span>
+            </div>
+            <p>Descubra outros membros, veja a porcentagem de afinidade de gostos com seu perfil e envie convites de amizade.</p>
+
+            <div class="community-search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="communitySearchInput" class="search-input" placeholder="Buscar membros por nome, @usuário, bio ou preferências...">
+            </div>
+          </div>
+
+          <div id="communityGrid" class="community-grid">
+            <!-- Cards de usuários com medidor de afinidade inseridos dinamicamente -->
+          </div>
+        </div>
+
+        <!-- SEÇÃO 2B: SOLICITAÇÕES DE AMIZADE (INBOX) -->
+        <div id="communityRequestsSection" style="display: none;">
+          <div class="requests-header">
+            <h2>Gerenciamento de Solicitações 📬</h2>
+            <p>Aceite ou recuse pedidos de amizade recebidos e gerencie convites enviados pendentes.</p>
+          </div>
+
+          <div class="requests-columns-layout">
+            <!-- Coluna de Solicitações Recebidas -->
+            <div class="requests-column-card">
+              <div class="requests-column-header">
+                <h3>📥 Recebidas (<span id="incomingRequestsCount">0</span>)</h3>
+                <p class="desc-muted">Membros que solicitaram conexão com você.</p>
+              </div>
+              <div id="incomingRequestsList" class="requests-list-container">
+                <!-- Preenchido dinamicamente pelo JavaScript -->
+              </div>
+            </div>
+
+            <!-- Coluna de Solicitações Enviadas -->
+            <div class="requests-column-card">
+              <div class="requests-column-header">
+                <h3>📤 Enviadas (<span id="outgoingRequestsCount">0</span>)</h3>
+                <p class="desc-muted">Pedidos que você enviou aguardando aprovação.</p>
+              </div>
+              <div id="outgoingRequestsList" class="requests-list-container">
+                <!-- Preenchido dinamicamente pelo JavaScript -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEÇÃO 2C: FEED DE ATIVIDADES DOS AMIGOS -->
+        <div id="communityFeedSection" style="display: none;">
+          <div class="feed-header">
+            <h2>Feed de Atividades dos Amigos ⚡</h2>
+            <p>Acompanhe em tempo real o que seus amigos conectados com status aceito estão assistindo, jogando, lendo e conquistando.</p>
+          </div>
+
+          <div id="activityFeedContainer" class="activity-feed-timeline">
+            <!-- Linha do tempo de atividades dinâmicas com reações -->
+          </div>
+        </div>
+
+        <!-- SEÇÃO 2D: USUÁRIOS BLOQUEADOS -->
+        <div id="communityBlockedSection" style="display: none;">
+          <div class="requests-header">
+            <h2>Usuários Bloqueados 🚫</h2>
+            <p>Gerencie membros que você bloqueou. Usuários bloqueados não podem enviar pedidos de amizade, visualizar seu perfil ou interagir no feed.</p>
+          </div>
+
+          <div id="blockedUsersListContainer" class="blocked-users-container">
+            <!-- Preenchido dinamicamente pelo JavaScript -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==========================================
+           VISÃO 3: Perfil do Usuário & Dashboard
+           ========================================== -->
+      <section id="profileView" class="profile-section">
+        
+        <div class="profile-layout">
+          
+          <!-- Card de Pré-visualização do Perfil -->
+          <div class="profile-preview-card">
+            <div class="profile-card-avatar-wrapper">
+              <div class="profile-card-avatar" id="cardAvatarPreview">👤</div>
+            </div>
+
+            <h3 id="cardProfileName">Meu Perfil</h3>
+            <div class="profile-preview-user" id="cardProfileUsername">@usuario</div>
+            <div class="profile-equipped-title" id="cardProfileTitle">⭐ Iniciante Curioso</div>
+            
+            <p class="profile-preview-bio" id="cardProfileBio">
+              Seja bem-vindo ao seu espaço cultural no Keeplay!
+            </p>
+
+            <div class="profile-stats-grid">
+              <div class="profile-stat-box">
+                <div class="val" id="profileStatItems">0</div>
+                <div class="lbl">Obras</div>
+              </div>
+              <div class="profile-stat-box">
+                <div class="val" id="profileStatLevel">Nv. 1</div>
+                <div class="lbl">Patente</div>
+              </div>
+              <div class="profile-stat-box">
+                <div class="val" id="profileStatPlatinas">0</div>
+                <div class="lbl">Platinas 🏆</div>
+              </div>
+              <div class="profile-stat-box">
+                <div class="val" id="profileStatBadges">0</div>
+                <div class="lbl">Troféus</div>
+              </div>
+              <div class="profile-stat-box">
+                <div class="val" id="profileStatHours">0h</div>
+                <div class="lbl">Tempo Total</div>
+              </div>
+              <div class="profile-stat-box">
+                <div class="val" id="profileStatLists">0</div>
+                <div class="lbl">Listas</div>
+              </div>
+            </div>
+
+            <!-- Botões de Ação no Card do Perfil -->
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem;">
+              <button type="button" id="btnCardOpenWrapped" class="btn-wrapped-card-action">
+                <span>✨ Ver Meu Wrapped Cultural</span>
+              </button>
+              <button type="button" id="btnProfileLogout" class="btn-secondary" style="width: 100%; border-color: rgba(239, 68, 68, 0.35); color: var(--danger); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1rem;">
+                <span>🚪</span> Sair da Conta
+              </button>
+            </div>
+          </div>
+
+          <!-- Formulário de Edição do Perfil -->
+          <div class="profile-edit-panel">
+            <h3>Editar Perfil & Preferências</h3>
+            <p class="desc">Atualize sua foto, título honorífico de nível, bio, credenciais e privacidade.</p>
+
+            <form id="profileForm">
+              <!-- Upload de Foto -->
+              <div class="photo-uploader">
+                <div class="photo-preview-mini" id="miniFormAvatar">R</div>
+                <div>
+                  <div class="photo-actions">
+                    <input type="file" id="avatarFileInput" accept="image/*" style="display: none;">
+                    <button type="button" id="btnTriggerUpload" class="btn-upload-file">
+                      📷 Escolher Foto
+                    </button>
+                    <button type="button" id="btnRemovePhoto" class="btn-remove-photo">
+                      Remover foto
+                    </button>
+                  </div>
+                  <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.35rem; display: block;">
+                    Formatos JPG, PNG ou WEBP.
+                  </small>
+                </div>
+              </div>
+
+              <!-- Configuração de Perfil Privado -->
+              <div class="privacy-toggle-box">
+                <div class="privacy-toggle-info">
+                  <h4>🔒 Perfil Privado</h4>
+                  <p>Ocultar seu acervo, listas e resenhas de membros que visitarem seu perfil.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="editIsPrivate">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <!-- Seleção de Título Equipado Desbloqueável -->
+              <div class="form-group">
+                <label for="editEquippedTitle" class="form-label">
+                  🎖️ Título Honorífico Equipado
+                </label>
+                <select id="editEquippedTitle" class="input-field">
+                  <!-- Populado dinamicamente com base nos níveis/conquistas -->
+                </select>
+                <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                  Desbloqueie mais títulos subindo de nível e acumulando troféus!
+                </small>
+              </div>
+
+              <div class="form-group">
+                <label for="editName" class="form-label">Nome de Exibição</label>
+                <input type="text" id="editName" class="input-field" placeholder="Ex: Rafael Silva" required>
+              </div>
+
+              <div class="form-group">
+                <label for="editUsername" class="form-label">Usuário de Login</label>
+                <input type="text" id="editUsername" class="input-field" placeholder="Seu nome de usuário..." required>
+              </div>
+
+              <div class="form-group">
+                <label for="editPassword" class="form-label">Senha de Acesso</label>
+                <input type="password" id="editPassword" class="input-field" placeholder="Sua nova senha..." required>
+              </div>
+
+              <div class="form-group">
+                <label for="editBio" class="form-label">Sobre Mim (Biografia)</label>
+                <textarea id="editBio" class="input-field" rows="3" placeholder="Conte um pouco sobre suas preferências culturais, franquias favoritas..."></textarea>
+              </div>
+
+              <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn-primary" style="width: auto; padding-left: 2rem; padding-right: 2rem;">
+                  Salvar Alterações
+                </button>
+              </div>
+            </form>
+
+            <!-- Zona de Perigo / Exclusão de Perfil -->
+            <div class="profile-danger-zone">
+              <div class="danger-zone-header">
+                <div class="danger-icon">⚠️</div>
+                <div class="danger-info">
+                  <h4>Zona de Perigo</h4>
+                  <p>A exclusão de perfil é definitiva e irreversível. Todos os seus registros culturais, diário de consumo, listas temáticas, conquistas e conexões serão permanentemente apagados.</p>
+                </div>
+              </div>
+              <div class="danger-zone-action">
+                <button type="button" id="btnOpenDeleteAccountModal" class="btn-delete-profile-trigger">
+                  <span>🗑️</span> Excluir Perfil
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==========================================
+             DASHBOARD DE ESTATÍSTICAS NO PERFIL
+             ========================================== -->
+        <div class="profile-dashboard-section" id="profileDashboardSection">
+          <div class="dashboard-header-bar">
+            <div>
+              <h3>📊 Dashboard & Análise Cultural</h3>
+              <p class="desc-muted">Métricas aprofundadas sobre suas preferências, tempo gasto e avaliações.</p>
+            </div>
+            <button type="button" id="btnDashboardWrapped" class="btn-icon-text btn-wrapped-pulse">
+              <span>✨ Abrir Retrospectiva Wrapped</span>
+            </button>
+          </div>
+
+          <div class="dashboard-grid">
+            <!-- Gráfico 1: Distribuição por Categoria & Gêneros -->
+            <div class="dashboard-card">
+              <h4>Distribuição do Acervo por Mídia</h4>
+              <div id="dashboardCategoryBars" class="category-distribution-bars">
+                <!-- Barras coloridas de categorias -->
+              </div>
+            </div>
+
+            <!-- Gráfico 2: Histograma de Avaliações -->
+            <div class="dashboard-card">
+              <h4>Distribuição de Avaliações (Estrelas)</h4>
+              <div id="dashboardRatingHistogram" class="rating-histogram">
+                <!-- Histograma de 5 a 1 estrelas -->
+              </div>
+            </div>
+
+            <!-- Gráfico 3: Tempo Estimado Dedicado por Mídia -->
+            <div class="dashboard-card">
+              <h4>Tempo Investido por Categoria</h4>
+              <div id="dashboardHoursBreakdown" class="hours-breakdown-list">
+                <!-- Horas detalhadas por filme, série, livro, jogo -->
+              </div>
+            </div>
+
+            <!-- Gráfico 4: Taxa de Conclusão & Status -->
+            <div class="dashboard-card">
+              <h4>Ciclo de Consumo & Taxa de Conclusão</h4>
+              <div id="dashboardStatusBreakdown" class="status-donut-wrap">
+                <!-- Badges e porcentagens de finalização vs em andamento -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+ 
+      <!-- ==========================================
+           VISÃO 4: Chats & Mensagens Diretas entre Amigos
+           ========================================== -->
+      <section id="chatsView" class="chats-section" style="display: none;">
+        
+        <div class="chats-layout-wrapper">
+          <!-- Coluna 1: Sidebar de Amigos / Conversas -->
+          <aside class="chats-sidebar">
+            <div class="chats-sidebar-header">
+              <div class="chats-sidebar-title-row">
+                <div class="chats-header-title">
+                  <span class="chats-icon-badge">💬</span>
+                  <h3>Mensagens Diretas</h3>
+                </div>
+                <span class="chats-friends-count-pill" id="chatFriendsCount">0 amigos</span>
+              </div>
+              <p class="desc-muted" style="font-size: 0.78rem; margin-top: 0.35rem;">Converse em tempo real com quem você tem amizade conectada.</p>
+
+              <!-- Busca de conversas / amigos -->
+              <div class="chats-search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="chatFriendsSearchInput" class="search-input" placeholder="Buscar amigos conectados...">
+              </div>
+            </div>
+
+            <!-- Lista de Amigos com Conversas -->
+            <div id="chatFriendsListContainer" class="chats-friends-list" aria-label="Lista de Amigos">
+              <!-- Renderizado dinamicamente pelo JavaScript -->
+            </div>
+          </aside>
+
+          <!-- Coluna 2: Janela da Conversa Ativa -->
+          <div class="chat-conversation-area">
+            
+            <!-- Estado Quando Nenhum Chat Está Selecionado -->
+            <div id="noChatSelectedPlaceholder" class="chat-empty-placeholder">
+              <div class="chat-placeholder-visual">
+                <div class="chat-placeholder-icon">💬</div>
+                <div class="chat-placeholder-glow"></div>
+              </div>
+              <h3>Suas Conversas Culturais</h3>
+              <p>Selecione um amigo conectado na lista ao lado para trocar impressões, debater finais de séries, resenhar filmes e comparar conquistas!</p>
+              <div class="chat-placeholder-tips">
+                <div class="chat-tip-pill">✨ Exclusivo para amigos confirmados</div>
+                <div class="chat-tip-pill">🍿 Compartilhe recomendações</div>
+                <div class="chat-tip-pill">⚡ Respostas em tempo real</div>
+              </div>
+            </div>
+
+            <!-- Janela do Chat Selecionado -->
+            <div id="activeChatContainer" class="active-chat-container" style="display: none;">
+              
+              <!-- Cabeçalho do Chat Ativo -->
+              <div class="active-chat-header">
+                <div class="active-chat-user-info">
+                  <!-- Botão voltar (para mobile) -->
+                  <button type="button" id="btnChatBackToList" class="btn-chat-mobile-back" title="Voltar para a lista">
+                    ←
+                  </button>
+                  <div class="chat-header-avatar-wrap">
+                    <div id="activeChatAvatar" class="active-chat-avatar">U</div>
+                    <span class="chat-status-indicator online" title="Amigo conectado"></span>
+                  </div>
+                  <div>
+                    <div class="chat-header-name-row">
+                      <h3 id="activeChatName">Nome do Amigo</h3>
+                      <span id="activeChatUsername" class="chat-header-username">@usuario</span>
+                    </div>
+                    <div class="chat-header-meta">
+                      <span id="activeChatTitleBadge" class="equipped-title-badge chat-title-mini">🎖️ Explorador</span>
+                      <span id="activeChatAffinityBadge" class="chat-affinity-pill">✨ 85% Afinidade</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="active-chat-actions">
+                  <button type="button" id="btnActiveChatViewProfile" class="btn-icon-text chat-btn-profile" title="Ver catálogo e perfil deste amigo">
+                    <span>📚</span> Ver Catálogo
+                  </button>
+                  <button type="button" id="btnActiveChatDeleteChat" class="btn-icon-text chat-btn-delete" title="Excluir histórico de conversa com este amigo">
+                    <span>🗑️</span> Excluir Chat
+                  </button>
+                </div>
+              </div>
+
+              <!-- Feed / Linha do Tempo das Mensagens -->
+              <div id="chatMessagesStream" class="chat-messages-stream" aria-live="polite">
+                <!-- Bolhas de mensagens inseridas dinamicamente -->
+              </div>
+
+              <!-- Indicador de "Digitando..." animado -->
+              <div id="chatTypingIndicator" class="chat-typing-indicator" style="display: none;">
+                <div class="typing-avatar" id="typingAvatar">U</div>
+                <div class="typing-bubble">
+                  <span class="typing-dot"></span>
+                  <span class="typing-dot"></span>
+                  <span class="typing-dot"></span>
+                </div>
+                <span class="typing-text" id="typingText">digitando...</span>
+              </div>
+
+              <!-- Barra de Reações Culturais Rápidas -->
+              <div class="chat-quick-reactions-bar">
+                <span class="quick-reactions-label">Reações rápidas:</span>
+                <div class="quick-reactions-buttons">
+                  <button type="button" class="quick-reaction-btn" data-emoji="🍿" title="Cinema & Pipoca">🍿</button>
+                  <button type="button" class="quick-reaction-btn" data-emoji="🎬" title="Filme Épico">🎬</button>
+                  <button type="button" class="quick-reaction-btn" data-emoji="🎮" title="Jogatina">🎮</button>
+                  <button type="button" class="quick-reaction-btn" data-emoji="📚" title="Livro & Leitura">📚</button>
+                  <button type="button" class="quick-reaction-btn" data-emoji="⭐" title="Obra-prima 5 Estrelas">⭐</button>
+                  <button type="button" class="quick-reaction-btn" data-emoji="🔥" title="Incrível!">🔥</button>
+                  <button type="button" class="quick-reaction-btn" data-emoji="❤️" title="Amei">❤️</button>
+                  <button type="button" class="quick-reaction-btn" data-emoji="😱" title="Final Chocante!">😱</button>
+                </div>
+              </div>
+
+              <!-- Barra de Digitação & Envio -->
+              <form id="chatMessageForm" class="chat-input-form" autocomplete="off">
+                <div class="chat-input-wrapper">
+                  <input type="text" id="chatMessageInput" class="chat-text-input" placeholder="Escreva uma mensagem..." maxlength="1000" autocomplete="off" required>
+                  <button type="submit" id="btnSendChatMessage" class="btn-send-message" title="Enviar mensagem (Enter)">
+                    <span>Enviar</span>
+                    <span class="send-icon">➤</span>
+                  </button>
+                </div>
+                <small class="chat-form-tip">Pressione <strong>Enter</strong> para enviar. Troca de mensagens restrita a amigos conectados.</small>
+              </form>
+
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==========================================
+       Modal de Criação / Edição de Registro (Expandido)
+       ========================================== -->
+  <div id="mediaModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 id="modalTitle">Novo Registro Cultural</h3>
+        <button id="btnCloseModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <form id="mediaForm" class="modal-body">
+        <input type="hidden" id="editItemId">
+
+        <div class="form-row-2">
+          <div class="form-group" style="flex: 2;">
+            <label for="itemTitle" class="form-label">Título da Obra</label>
+            <input type="text" id="itemTitle" class="input-field" placeholder="Ex: Interestelar, The Witcher 3, Duna..." required>
+          </div>
+
+          <div class="form-group" style="flex: 1;">
+            <label for="itemCategory" class="form-label">Categoria</label>
+            <select id="itemCategory" class="input-field" required>
+              <option value="filme">🎬 Filme</option>
+              <option value="serie">🍿 Série</option>
+              <option value="livro">📚 Livro</option>
+              <option value="jogo">🎮 Jogo</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Status Específico da Mídia (Adaptado dinamicamente) -->
+        <div class="form-row-2">
+          <div class="form-group" style="flex: 1;">
+            <label for="itemStatus" class="form-label">Status de Consumo</label>
+            <select id="itemStatus" class="input-field">
+              <!-- Preenchido dinamicamente conforme a categoria -->
+            </select>
+          </div>
+
+          <!-- Contadores Específicos de Progresso -->
+          <div class="form-group" id="progressFieldContainer" style="flex: 1;">
+            <label for="itemProgressCurrent" class="form-label" id="progressLabel">Progresso</label>
+            <div class="progress-inputs-row">
+              <input type="number" id="itemProgressCurrent" class="input-field" placeholder="Atual (ex: 8)" min="0">
+              <span class="sep-slash">/</span>
+              <input type="number" id="itemProgressTotal" class="input-field" placeholder="Total (ex: 24)" min="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Horas Gastas e Temporada (quando aplicável) -->
+        <div class="form-row-2" id="extraFieldsRow">
+          <div class="form-group" id="seasonFieldGroup" style="display: none; flex: 1;">
+            <label for="itemSeason" class="form-label">Temporada Atual</label>
+            <input type="number" id="itemSeason" class="input-field" placeholder="Ex: 2" min="1" value="1">
+          </div>
+
+          <div class="form-group" id="hoursFieldGroup" style="flex: 1;">
+            <label for="itemHoursSpent" class="form-label">Horas Dedicadas (Est.)</label>
+            <input type="number" id="itemHoursSpent" class="input-field" placeholder="Ex: 35.5" min="0" step="0.5">
+          </div>
+        </div>
+
+        <!-- Onde Assistir / Onde Jogar (Provedores) -->
+        <div class="form-group">
+          <label class="form-label">Onde Assistir / Onde Jogar / Plataforma</label>
+          <div class="providers-chip-group" id="providersChipGroup">
+            <!-- Chips selecionáveis gerados dinamicamente -->
+          </div>
+          <input type="hidden" id="itemSelectedProviders" value="">
+        </div>
+
+        <!-- Diário de Consumo (Datas) -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="itemDateStarted" class="form-label">Data de Início</label>
+            <input type="date" id="itemDateStarted" class="input-field">
+          </div>
+          <div class="form-group">
+            <label for="itemDateFinished" class="form-label">Data de Conclusão / Consumo</label>
+            <input type="date" id="itemDateFinished" class="input-field">
+          </div>
+        </div>
+
+        <!-- Checkbox de Revisita (Re-watch / Re-play / Releitura) -->
+        <div class="checkbox-inline-row">
+          <label class="custom-checkbox-label">
+            <input type="checkbox" id="itemIsRewatch">
+            <span class="chk-custom"></span>
+            <span>🔄 Esta experiência foi uma revisitação (Re-watch / Re-play / Releitura)</span>
+          </label>
+        </div>
+
+        <!-- Capa da Obra -->
+        <div class="form-group" style="margin-top: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <label class="form-label" style="margin-bottom: 0;">
+              Capa da Obra <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">(Opcional)</span>
+            </label>
+            <button type="button" id="btnClearCover" class="btn-text-action" style="display: none; font-size: 0.78rem; color: var(--danger); background: none; border: none; cursor: pointer; padding: 0.2rem 0.4rem;">✕ Remover Capa</button>
+          </div>
+
+          <div class="cover-input-tabs">
+            <button type="button" class="cover-tab-btn active" id="tabCoverUrl">🔗 Link da Imagem (URL)</button>
+            <button type="button" class="cover-tab-btn" id="tabCoverFile">📁 Upload de Imagem</button>
+          </div>
+
+          <div id="coverUrlContainer" class="cover-mode-container">
+            <input type="url" id="itemCoverUrl" class="input-field" placeholder="Cole o link da capa (ex: https://...)" autocomplete="off">
+          </div>
+
+          <div id="coverFileContainer" class="cover-mode-container" style="display: none;">
+            <input type="file" id="itemCoverFile" accept="image/*" style="display: none;">
+            <button type="button" id="btnTriggerCoverFile" class="btn-cover-upload">
+              <span>🖼️ Escolher imagem do dispositivo</span>
+            </button>
+          </div>
+
+          <!-- Pré-visualização da Capa -->
+          <div id="coverPreviewWrap" class="cover-preview-wrap">
+            <div id="coverPreviewEmpty" class="cover-preview-empty">
+              <span style="font-size: 1.5rem; opacity: 0.5;">🖼️</span>
+              <span style="font-size: 0.82rem; color: var(--text-muted);">Nenhuma capa selecionada (opcional)</span>
+            </div>
+            <div id="coverPreviewImgContainer" class="cover-preview-img-container" style="display: none;">
+              <img id="coverPreviewImg" src="" alt="Prévia da Capa">
+              <span class="cover-preview-badge">Pré-visualização</span>
+            </div>
+          </div>
+
+          <input type="hidden" id="itemCoverValue" value="">
+        </div>
+
+        <!-- Avaliação com Estrelas -->
+        <div class="form-group">
+          <label class="form-label">Sua Avaliação</label>
+          <div class="star-input-group" id="starPicker">
+            <button type="button" class="star-btn" data-value="1" title="1 Estrela">★</button>
+            <button type="button" class="star-btn" data-value="2" title="2 Estrelas">★</button>
+            <button type="button" class="star-btn" data-value="3" title="3 Estrelas">★</button>
+            <button type="button" class="star-btn" data-value="4" title="4 Estrelas">★</button>
+            <button type="button" class="star-btn" data-value="5" title="5 Estrelas">★</button>
+            <span class="star-xp-hint" id="starXpHint">+60 XP</span>
+          </div>
+          <input type="hidden" id="itemRating" value="5">
+        </div>
+
+        <!-- Comentário / Crítica -->
+        <div class="form-group">
+          <label for="itemComment" class="form-label">Comentário ou Crítica</label>
+          <textarea id="itemComment" class="input-field" rows="3" placeholder="O que você achou? Detalhes marcantes da narrativa, jogabilidade ou reflexões..." required></textarea>
+        </div>
+
+        <!-- Checkbox de Tagging de Spoiler -->
+        <div class="checkbox-inline-row" style="margin-top: -0.25rem; margin-bottom: 0.75rem;">
+          <label class="custom-checkbox-label">
+            <input type="checkbox" id="itemIsSpoiler">
+            <span class="chk-custom"></span>
+            <span>🤫 <strong>Contém Spoiler</strong> (ocultar texto com efeito de blur até que cliquem para ver)</span>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap;">
+          <button type="button" id="btnDeleteModalItem" class="btn-danger-outline" style="display: none;">🗑️ Descartar Registro</button>
+          <button type="button" id="btnCancelModal" class="btn-icon-text" style="flex: 1; justify-content: center;">Cancelar</button>
+          <button type="submit" id="btnSaveMedia" class="btn-primary" style="flex: 2; margin-top: 0;">Salvar e Ganhar XP</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Modal de Criação / Edição de Lista Personalizada
+       ========================================== -->
+  <div id="customListModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customListModalTitle">
+    <div class="modal-card" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3 id="customListModalTitle">Criar Nova Lista</h3>
+        <button id="btnCloseCustomListModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <form id="customListForm" class="modal-body">
+        <input type="hidden" id="editListId" value="">
+
+        <div class="form-group">
+          <label for="listTitleInput" class="form-label">Título da Lista</label>
+          <input type="text" id="listTitleInput" class="input-field" placeholder="Ex: Melhores RPGs da Década, Sci-Fi Inesquecíveis..." required>
+        </div>
+
+        <div class="form-group">
+          <label for="listDescInput" class="form-label">Descrição</label>
+          <textarea id="listDescInput" class="input-field" rows="2" placeholder="Explique o tema desta coleção para outros exploradores..."></textarea>
+        </div>
+
+        <div class="privacy-toggle-box" style="margin-bottom: 1.25rem;">
+          <div class="privacy-toggle-info">
+            <h4>🌐 Visibilidade da Lista</h4>
+            <p>Listas públicas podem ser descobertas por outros membros na comunidade.</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="listIsPublic" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Selecione as Obras do seu Acervo para incluir:</label>
+          <div id="listItemsSelectorList" class="items-selector-checklist">
+            <!-- Lista com checkboxes das obras do catálogo -->
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: flex-end;">
+          <button type="button" id="btnCancelCustomList" class="btn-icon-text">Cancelar</button>
+          <button type="submit" id="btnSaveCustomList" class="btn-primary" style="width: auto;">Salvar Lista</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Modal de Visualização de Lista Personalizada
+       ========================================== -->
+  <div id="viewCustomListModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="viewCustomListTitle">
+    <div class="modal-card" style="max-width: 820px;">
+      <div class="modal-header">
+        <h3 id="viewCustomListTitle">Detalhes da Lista</h3>
+        <button id="btnCloseViewListModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <div class="modal-body" id="viewCustomListBody">
+        <!-- Renderizado dinamicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Modal de Retrospectiva Interativa ("Wrapped")
+       ========================================== -->
+  <div id="wrappedModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="wrappedModalTitle">
+    <div class="modal-card wrapped-card-container">
+      
+      <!-- Barra de Progresso estilo Stories -->
+      <div class="wrapped-story-bars" id="wrappedStoryBars">
+        <div class="story-bar active" data-slide="0"><div class="story-fill"></div></div>
+        <div class="story-bar" data-slide="1"><div class="story-fill"></div></div>
+        <div class="story-bar" data-slide="2"><div class="story-fill"></div></div>
+        <div class="story-bar" data-slide="3"><div class="story-fill"></div></div>
+      </div>
+
+      <button id="btnCloseWrapped" class="btn-close-wrapped" aria-label="Fechar Retrospectiva">✕</button>
+
+      <!-- Slides Interativos -->
+      <div class="wrapped-slides-wrapper" id="wrappedSlidesContainer">
+        <!-- Inseridos dinamicamente pelo JavaScript -->
+      </div>
+
+      <!-- Controles Inferiores do Wrapped -->
+      <div class="wrapped-controls-bar">
+        <button type="button" id="btnWrappedPrev" class="btn-wrapped-nav">← Anterior</button>
+        <button type="button" id="btnWrappedShare" class="btn-wrapped-share">📋 Compartilhar Resumo</button>
+        <button type="button" id="btnWrappedNext" class="btn-wrapped-nav">Próximo →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Modal de Importação / Exportação (CSV & JSON)
+       ========================================== -->
+  <div id="csvModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="csvModalTitle">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3 id="csvModalTitle">Gerenciador de Dados & Portabilidade</h3>
+        <button id="btnCloseCsvModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="auth-tabs" style="margin-bottom: 1.5rem;">
+          <button type="button" class="auth-tab-btn active" id="tabCsvImport">📥 Importar Dados</button>
+          <button type="button" class="auth-tab-btn" id="tabCsvExport">📤 Exportar Backup</button>
+        </div>
+
+        <!-- Aba de Importação -->
+        <div id="csvImportPane">
+          <p class="desc-muted" style="margin-bottom: 1rem;">
+            Importe seu histórico cultural de outros serviços ou de planilhas locais.
+          </p>
+
+          <div class="csv-dropzone" id="csvDropzone">
+            <span class="dropzone-icon">📄</span>
+            <h4>Selecione ou arraste seu arquivo CSV</h4>
+            <p>Formato suportado: colunas <code>titulo, categoria, status, nota, comentario, data</code></p>
+            <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+            <button type="button" id="btnSelectCsvFile" class="btn-primary" style="width: auto; margin-top: 0.75rem;">
+              Escolher Arquivo CSV
+            </button>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;">
+            <button type="button" id="btnDownloadCsvTemplate" class="btn-icon-text" style="flex: 1; justify-content: center;">
+              ⬇️ Baixar Modelo CSV
+            </button>
+            <button type="button" id="btnLoadDemoData" class="btn-icon-text" style="flex: 1; justify-content: center;" title="Importar exemplos populares de filmes, séries, livros e games">
+              ✨ Carregar Obras Exemplo
+            </button>
+          </div>
+
+          <div id="csvImportFeedback" style="display: none; margin-top: 1rem;" class="alert-success"></div>
+        </div>
+
+        <!-- Aba de Exportação -->
+        <div id="csvExportPane" style="display: none;">
+          <p class="desc-muted" style="margin-bottom: 1.5rem;">
+            Faça download dos seus dados completos para garantir sua cópia de segurança permanente.
+          </p>
+
+          <div class="export-actions-grid">
+            <div class="export-card">
+              <div class="export-card-icon">📊</div>
+              <h4>Exportar em Planilha (CSV)</h4>
+              <p>Ideal para abrir no Excel, Google Sheets ou Notion.</p>
+              <button type="button" id="btnExportCsv" class="btn-primary" style="margin-top: 1rem;">
+                Baixar Acervo em CSV
+              </button>
+            </div>
+
+            <div class="export-card">
+              <div class="export-card-icon">💾</div>
+              <h4>Backup Completo (JSON)</h4>
+              <p>Contém todas as listas, logs do diário e progresso.</p>
+              <button type="button" id="btnExportJson" class="btn-icon-text" style="margin-top: 1rem; width: 100%; justify-content: center;">
+                Baixar Backup JSON
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Modal de Visualização do Catálogo de Outro Usuário
+       ========================================== -->
+  <div id="userCatalogModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="userCatalogModalTitle">
+    <div class="modal-card" style="max-width: 820px;">
+      <div class="modal-header">
+        <h3 id="userCatalogModalTitle">Catálogo de Membro</h3>
+        <button id="btnCloseUserCatalogModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <div class="modal-body" id="userCatalogModalBody">
+        <!-- Preenchido dinamicamente (Catálogo de itens, Listas Públicas ou Aviso de Perfil Privado) -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Modal de Conquistas (Achievements Gallery + Secretas)
+       ========================================== -->
+  <div id="achievementsModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="achievementsTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="achievementsTitle">Galeria de Conquistas & Medalhas</h3>
+        <button id="btnCloseAchievements" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size: 0.88rem; margin-bottom: 1rem;">
+          Desbloqueie medalhas exclusivas completando marcos de consumo e desvendando conquistas secretas!
+        </p>
+
+        <!-- Filtros por Categoria no Modal de Conquistas -->
+        <div class="category-tabs" id="achievementsTabs" style="margin-bottom: 1.25rem; overflow-x: auto;">
+          <button type="button" class="tab-btn active" data-ach-cat="todos">✨ Todas</button>
+          <button type="button" class="tab-btn" data-ach-cat="filme">🎬 Filmes</button>
+          <button type="button" class="tab-btn" data-ach-cat="serie">🍿 Séries</button>
+          <button type="button" class="tab-btn" data-ach-cat="livro">📚 Livros</button>
+          <button type="button" class="tab-btn" data-ach-cat="jogo">🎮 Jogos</button>
+          <button type="button" class="tab-btn" data-ach-cat="especial">🏆 Especiais</button>
+          <button type="button" class="tab-btn" data-ach-cat="missoes">🎯 Missões</button>
+          <button type="button" class="tab-btn" data-ach-cat="secreta">🤫 Secretas</button>
+        </div>
+
+        <div id="achievementsList" class="achievements-grid">
+          <!-- Conquistas inseridas dinamicamente com barras de progresso -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Modal de Denúncia de Conteúdo (Reports)
+       ========================================== -->
+  <div id="reportModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
+    <div class="modal-card" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 id="reportModalTitle">🚨 Denunciar Conteúdo</h3>
+        <button id="btnCloseReportModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <form id="reportForm" class="modal-body">
+        <input type="hidden" id="reportItemId" value="">
+        <input type="hidden" id="reportAuthorId" value="">
+        <input type="hidden" id="reportActivityId" value="">
+
+        <!-- Pré-visualização do Conteúdo Denunciado -->
+        <div class="report-preview-box">
+          <div class="report-preview-header">
+            <span class="report-preview-author" id="reportAuthorName">@membro</span>
+            <span class="report-preview-media" id="reportMediaTitle">Obra</span>
+          </div>
+          <p class="report-preview-text" id="reportCommentSnippet">Trecho do comentário ou resenha...</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Selecione o Motivo da Denúncia</label>
+          <div class="report-reasons-list">
+            <label class="report-reason-radio">
+              <input type="radio" name="reportReason" value="spoiler_unmarked" checked>
+              <span class="radio-custom"></span>
+              <div class="reason-info">
+                <strong>🤫 Spoiler não demarcado</strong>
+                <span>Revela reviravoltas ou desfechos cruciais sem o alerta de spoiler.</span>
+              </div>
+            </label>
+
+            <label class="report-reason-radio">
+              <input type="radio" name="reportReason" value="offensive">
+              <span class="radio-custom"></span>
+              <div class="reason-info">
+                <strong>⚠️ Conteúdo ofensivo ou discurso de ódio</strong>
+                <span>Comentário tóxico, assédio, intolerância ou ataques a membros.</span>
+              </div>
+            </label>
+
+            <label class="report-reason-radio">
+              <input type="radio" name="reportReason" value="spam">
+              <span class="radio-custom"></span>
+              <div class="reason-info">
+                <strong>📢 Spam ou conteúdo enganoso</strong>
+                <span>Propaganda externa, links suspeitos ou texto sem sentido.</span>
+              </div>
+            </label>
+
+            <label class="report-reason-radio">
+              <input type="radio" name="reportReason" value="other">
+              <span class="radio-custom"></span>
+              <div class="reason-info">
+                <strong>📝 Outro motivo</strong>
+                <span>Infração aos termos de convivência da comunidade.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reportDetailsInput" class="form-label">Detalhes adicionais (opcional)</label>
+          <textarea id="reportDetailsInput" class="input-field" rows="2" placeholder="Explique brevemente por que este conteúdo viola as regras..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: flex-end;">
+          <button type="button" id="btnCancelReportModal" class="btn-icon-text">Cancelar</button>
+          <button type="submit" id="btnSubmitReport" class="btn-primary btn-danger-action" style="width: auto;">
+            🚨 Enviar Denúncia
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       Modal de Exclusão Definitiva de Perfil
+       ========================================== -->
+  <div id="deleteAccountModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="deleteAccountModalTitle">
+    <div class="modal-card modal-card-danger" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 id="deleteAccountModalTitle" style="color: var(--status-abandonado); display: flex; align-items: center; gap: 0.5rem;">
+          <span>⚠️</span> Excluir Meu Perfil
+        </h3>
+        <button id="btnCloseDeleteAccountModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="delete-warning-banner">
+          <p><strong>Atenção:</strong> Esta ação <u>não pode ser desfeita</u>. Ao excluir sua conta, todos os seguintes dados serão apagados definitivamente:</p>
+          <ul>
+            <li>Seu acervo de obras culturais cadastradas (<span id="deleteStatsItemsCount">0</span> itens);</li>
+            <li>Suas listas personalizadas públicas e privadas;</li>
+            <li>Seu histórico de Diário Cultural e horas de entretenimento;</li>
+            <li>Vínculos de amizade e convites pendentes;</li>
+            <li>Suas publicações e reações no feed social.</li>
+          </ul>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.25rem;">
+          <label for="deleteConfirmInput" class="form-label">
+            Para confirmar, digite seu nome de usuário (<code id="deleteConfirmUsernamePrompt" style="color: var(--status-abandonado); font-weight: 700;">@usuario</code>):
+          </label>
+          <input type="text" id="deleteConfirmInput" class="input-field" placeholder="Digite seu @usuario aqui..." autocomplete="off">
+        </div>
+
+        <div class="form-group">
+          <label for="deleteConfirmPassword" class="form-label">
+            Digite sua senha de acesso para validação de segurança:
+          </label>
+          <input type="password" id="deleteConfirmPassword" class="input-field" placeholder="Sua senha..." autocomplete="off">
+        </div>
+
+        <div id="deleteAccountError" class="alert-error" style="display: none; margin-top: 0.75rem;" role="alert"></div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; justify-content: flex-end;">
+          <button type="button" id="btnCancelDeleteAccount" class="btn-icon-text">Cancelar</button>
+          <button type="button" id="btnConfirmDeleteAccount" class="btn-primary btn-danger-action" style="width: auto;">
+            🗑️ Excluir Permanentemente
+          </button>
+        </div>
+      </div>
+    </div>
+  <!-- ==========================================
+       Modal de Termos de Uso, Contrato & LGPD
+       ========================================== -->
+  <div id="termsModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
+    <div class="modal-card terms-modal-card" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="terms-modal-header-info">
+          <span class="terms-badge">🛡️ LGPD & Privacidade (Lei nº 13.709/2018)</span>
+          <h3 id="termsModalTitle" style="font-size: 1.15rem; margin-top: 0.25rem;">Termos de Uso e Tratamento de Dados</h3>
+        </div>
+        <button type="button" id="btnCloseTermsModal" class="btn-close-modal" aria-label="Fechar modal">✕</button>
+      </div>
+
+      <div class="modal-body terms-modal-body">
+        <div class="terms-intro-card">
+          <div class="terms-intro-icon">📜</div>
+          <div>
+            <strong>Transparência e Respeito aos Seus Dados</strong>
+            <p>O Keeplay preza pela sua segurança e privacidade. Aqui explicamos em linguagem simples e direta como suas informações são tratadas na plataforma, sem termos jurídicos complexos.</p>
+          </div>
+        </div>
+
+        <div class="terms-sections-list">
+          <div class="terms-topic">
+            <h4>1. O que é o Keeplay?</h4>
+            <p>O Keeplay é uma plataforma cultural e de entretenimento que permite catalogar seus filmes, séries, livros e jogos favoritos, acompanhar seu tempo investido, participar de missões gamificadas, conversar via chat e conectar-se com amigos.</p>
+          </div>
+
+          <div class="terms-topic">
+            <h4>2. Quais dados coletamos e para que servem? (Princípio da Necessidade)</h4>
+            <p>Coletamos apenas o estritamente necessário para o funcionamento das suas funcionalidades:</p>
+            <ul>
+              <li><strong>Nome e @NomeDeUsuario:</strong> Para identificação pública ou privada na comunidade e nos chats;</li>
+              <li><strong>Senha de Acesso:</strong> Para garantir que apenas você acerte ou edite suas preferências e catálogo;</li>
+              <li><strong>Acervo Cultural e Diário:</strong> Obras salvas, notas, horas dedicadas e comentários de entretenimento;</li>
+              <li><strong>Mensagens de Chat:</strong> Trocadas exclusivamente entre amigos com vínculo mútuo aceito.</li>
+            </ul>
+            <div class="terms-callout-safe">
+              <span>🚫</span> <strong>Nenhum Dado Sensível:</strong> Nunca solicitamos CPF, cartões de crédito, dados bancários, telefone ou sua localização geográfica em tempo real.
+            </div>
+          </div>
+
+          <div class="terms-topic">
+            <h4>3. Como cuidamos da sua Privacidade?</h4>
+            <ul>
+              <li><strong>Modo Privado:</strong> Você pode transformar seu perfil em Privado a qualquer momento nas configurações, ocultando seu catálogo de quem você não autorizar;</li>
+              <li><strong>Bloqueio de Usuários:</strong> Você tem o poder de bloquear qualquer usuário indesejado, cessando interações e visibilidade instantaneamente;</li>
+              <li><strong>Denúncias:</strong> Mecanismo integrado para denunciar spoilers desmarcados ou comentários ofensivos.</li>
+            </ul>
+          </div>
+
+          <div class="terms-topic">
+            <h4>4. Seus Direitos Garantidos pela LGPD (Artigo 18)</h4>
+            <p>Você é o titular soberano de suas informações e pode exercer todos os seus direitos legais:</p>
+            <div class="terms-rights-grid">
+              <div class="terms-right-card">
+                <div class="right-icon">👁️</div>
+                <strong>Acesso e Correção</strong>
+                <p>Edite seu nome, foto, bio ou senha a qualquer instante pelo painel de perfil.</p>
+              </div>
+              <div class="terms-right-card">
+                <div class="right-icon">📥</div>
+                <strong>Portabilidade dos Dados</strong>
+                <p>Exporte todo o seu acervo cultural em arquivos CSV ou JSON para backup livre.</p>
+              </div>
+              <div class="terms-right-card">
+                <div class="right-icon">🗑️</div>
+                <strong>Direito ao Esquecimento</strong>
+                <p>Exclua seu perfil definitivamente na Zona de Perigo com expurgo total dos dados.</p>
+              </div>
+              <div class="terms-right-card">
+                <div class="right-icon">🔒</div>
+                <strong>Não Comercialização</strong>
+                <p>Seus dados nunca serão comercializados ou vendidos para anunciantes externos.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="terms-topic">
+            <h4>5. Armazenamento e Segurança</h4>
+            <p>Seus registros são guardados de maneira estruturada e segura em banco de dados relacional. Ao excluir sua conta, todos os seus vínculos, conversas, avaliações e dados pessoais são permanentemente apagados do sistema sem retenção de cópias ocultas.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer terms-modal-footer">
+        <a href="termos_lgpd.pdf" target="_blank" class="btn-icon-text" id="btnDownloadLgpdPdf" title="Visualizar ou baixar arquivo oficial em PDF" style="text-decoration: none;">
+          <span>📄</span> Abrir PDF Oficial (LGPD)
+        </a>
+        <button type="button" id="btnCancelTermsModal" class="btn-icon-text">Fechar</button>
+        <button type="button" id="btnAcceptTermsFromModal" class="btn-primary" style="width: auto; gap: 0.5rem;">
+          <span>✓</span> Concordo e Aceito os Termos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container de Toasts Dinâmicos -->
+  <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+
+  <!-- Scripts: Lógica Principal -->
+  <script src="app.js"></script>
+</body>
+</html>
