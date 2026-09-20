@@ -26,6 +26,8 @@ export async function PUT(req, { params }) {
       hours_spent, is_rewatch, providers = [], date_started, date_finished
     } = body;
 
+    const cleanHours = Math.max(0, parseFloat(String(hours_spent ?? 0).replace(",", ".")) || 0);
+
     await pool.query(
       `UPDATE media_items SET
         title=?, category=?, status=?, rating=?, comment=?, is_spoiler=?,
@@ -34,7 +36,7 @@ export async function PUT(req, { params }) {
        WHERE id=? AND user_id=?`,
       [title, category, status, rating || null, comment || null, is_spoiler ? 1 : 0,
        cover_image || null, current_progress || 0, total_progress || 0,
-       season_current || 1, hours_spent || 0, is_rewatch ? 1 : 0, id, user.id]
+       season_current || 1, cleanHours, is_rewatch ? 1 : 0, id, user.id]
     );
 
     // Update providers: delete existing then re-insert

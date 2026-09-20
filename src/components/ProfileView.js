@@ -168,7 +168,7 @@ export default function ProfileView() {
               <div className="lbl">Troféus 🏆</div>
             </div>
             <div className="profile-stat-box">
-              <div className="val">{profile?.total_hours_invested ? `${profile.total_hours_invested}h` : (profile?.hours_spent || "0h")}</div>
+              <div className="val">{profile?.hours_spent || (profile?.total_hours_invested ? (Number.isInteger(Number(profile.total_hours_invested)) ? `${Number(profile.total_hours_invested)}h` : `${parseFloat(Number(profile.total_hours_invested).toFixed(1))}h`) : "0h")}</div>
               <div className="lbl">Tempo Total</div>
             </div>
             <div className="profile-stat-box">

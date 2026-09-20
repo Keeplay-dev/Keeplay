@@ -572,7 +572,7 @@ export default function CatalogView() {
         <div className="hero-stats">
           <div className="stat-pill"><div className="stat-value">{profile?.total_items ?? profile?.total_media_items ?? items.length}</div><div className="stat-label">Registros</div></div>
           <div className="stat-pill"><div className="stat-value">{profile?.average_rating || (items.filter(i => Number(i.rating) > 0).length > 0 ? (items.filter(i => Number(i.rating) > 0).reduce((a, b) => a + Number(b.rating), 0) / items.filter(i => Number(i.rating) > 0).length).toFixed(1) : "0.0")}</div><div className="stat-label">Média ⭐</div></div>
-          <div className="stat-pill"><div className="stat-value">{profile?.hours_spent || (profile?.total_hours_invested ? `${Math.round(Number(profile.total_hours_invested))}h` : "0h")}</div><div className="stat-label">Tempo Dedicado</div></div>
+          <div className="stat-pill"><div className="stat-value">{profile?.hours_spent || (profile?.total_hours_invested ? (Number.isInteger(Number(profile.total_hours_invested)) ? `${Number(profile.total_hours_invested)}h` : `${parseFloat(Number(profile.total_hours_invested).toFixed(1))}h`) : (items.length > 0 ? (items.reduce((acc, i) => acc + (Number(i.hours_spent) || 0), 0) % 1 === 0 ? `${items.reduce((acc, i) => acc + (Number(i.hours_spent) || 0), 0)}h` : `${parseFloat(items.reduce((acc, i) => acc + (Number(i.hours_spent) || 0), 0).toFixed(1))}h`) : "0h"))}</div><div className="stat-label">Tempo Dedicado</div></div>
           <div className="stat-pill"><div className="stat-value">{userXp}</div><div className="stat-label">XP Total</div></div>
         </div>
       </section>

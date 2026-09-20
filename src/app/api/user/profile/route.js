@@ -18,6 +18,12 @@ async function getUserFromToken() {
   }
 }
 
+function formatHours(val) {
+  const num = Number(val) || 0;
+  if (num === 0) return "0h";
+  return Number.isInteger(num) ? `${num}h` : `${parseFloat(num.toFixed(1))}h`;
+}
+
 export async function GET(req) {
   try {
     const userAuth = await getUserFromToken();
@@ -74,7 +80,7 @@ export async function GET(req) {
         current_level: currentLevel,
         equipped_title: autoTitle,
         average_rating: averageRating,
-        hours_spent: userStats.total_hours_invested ? `${Math.round(Number(userStats.total_hours_invested))}h` : "0h",
+        hours_spent: formatHours(userStats.total_hours_invested),
         total_items: userStats.total_media_items || 0,
         next_title: nextTitle,
         unlocked_titles: unlockedTitles.map(t => t.title_name)
@@ -164,7 +170,7 @@ export async function PUT(req) {
       updatedProfile.equipped_title = autoTitle;
       updatedProfile.level = currentLevel;
       updatedProfile.current_level = currentLevel;
-      updatedProfile.hours_spent = updatedProfile.total_hours_invested ? `${Math.round(Number(updatedProfile.total_hours_invested))}h` : "0h";
+      updatedProfile.hours_spent = formatHours(updatedProfile.total_hours_invested);
       updatedProfile.total_items = updatedProfile.total_media_items || 0;
     }
 

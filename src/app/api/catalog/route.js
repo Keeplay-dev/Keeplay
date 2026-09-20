@@ -169,6 +169,7 @@ export async function POST(req) {
 
     const id = uuidv4();
     const xp = XP_BY_RATING[rating] || 50;
+    const cleanHours = Math.max(0, parseFloat(String(hours_spent ?? 0).replace(",", ".")) || 0);
 
     await pool.query(
       `INSERT INTO media_items
@@ -178,7 +179,7 @@ export async function POST(req) {
       [id, user.id, title, category, status, rating || null, comment || null,
        is_spoiler ? 1 : 0, cover_image || null,
        current_progress || 0, total_progress || 0, season_current || 1,
-       hours_spent || 0, is_rewatch ? 1 : 0, xp]
+       cleanHours, is_rewatch ? 1 : 0, xp]
     );
 
     for (const pid of providers) {
